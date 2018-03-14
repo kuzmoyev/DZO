@@ -1,6 +1,6 @@
 # How to run Qt in CLion: https://stackoverflow.com/a/38971661/4254425
 # Qt CMake example: https://github.com/pbek/QOwnNotes/blob/develop/src/CMakeLists.txt
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.5)
 project(gradient_painter)
 
 set(CMAKE_CXX_STANDARD 14)
