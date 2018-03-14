@@ -8,8 +8,11 @@ set(CMAKE_CXX_STANDARD 14)
 find_package(Qt5Widgets REQUIRED)
 # Find includes in corresponding build directories
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
+#include_directories(forms)
 # Instruct CMake to run moc automatically when needed.
 set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+#qt_wrap_ui(forms/mainwindow.ui)
 
-add_executable(gradient_gui src/main.cpp)
+add_executable(gradient_gui src/main.cpp forms/mainwindow.cpp)
 target_link_libraries(gradient_gui Qt5::Widgets)
