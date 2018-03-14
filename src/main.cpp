@@ -1,6 +1,7 @@
 #include <QApplication>
 #include <QPushButton>
 #include <QDebug>
+#include <include/simple_poisson_solver/poisson.h>
 
 #include "forms/mainwindow.h"
 
