@@ -8,12 +8,8 @@
 
 #include "QMouseEvent"
 
-CanvasView::CanvasView(CanvasModel& model,
-					   CanvasModel::ImageType role,
-					   QWidget* parent) : QWidget(parent),
-										  model_(model),
-										  role_(role),
-										  painting_mode_(ENABLED) {
+CanvasView::CanvasView(CanvasModel& model, ImageType role, QWidget* parent) :
+		QWidget(parent), model_(model), role_(role), painting_mode_(ENABLED) {
 	setFixedSize(model.getCanvasSize());
 	connect(&model_, &CanvasModel::canvasUpdated, this, &CanvasView::updateCanvas);
 	connect(&model_, &CanvasModel::canvasSizeChanged, this, &CanvasView::changeCanvasSize);
@@ -64,6 +60,5 @@ void CanvasView::mouseMoveEvent(QMouseEvent* event) {
 void CanvasView::paintEvent(QPaintEvent* event) {
 	//TODO check painting is clipped
 	QPainter p(this);
-	QWidget::paintEvent(event);
 	p.drawImage(QPoint(0, 0), model_.getImage(role_));
 }

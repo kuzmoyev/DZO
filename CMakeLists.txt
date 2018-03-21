@@ -25,6 +25,7 @@ add_executable(gradient_gui
         src/shapes/line.cpp
         forms/mainwindow.cpp
         forms/sidebar.cpp
+        src/canvas/image_type.h
         src/canvas/canvas_model.cpp
         src/canvas/canvas_view.cpp
         src/canvas/multi_canvas_view.cpp)

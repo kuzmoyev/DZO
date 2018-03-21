@@ -5,6 +5,7 @@
  */
 
 #include <QtCore/QMetaEnum>
+
 #include "canvas_model.h"
 
 CanvasModel::CanvasModel(QSize size) :
@@ -12,7 +13,7 @@ CanvasModel::CanvasModel(QSize size) :
 	setCanvasSize(size);
 }
 
-QImage CanvasModel::getImage(CanvasModel::ImageType type) {
+QImage CanvasModel::getImage(ImageType type) {
 	return images_[(int) type];
 }
 
@@ -62,8 +63,8 @@ void CanvasModel::onMouseUp(QPoint pos) {
 }
 
 void CanvasModel::updateCanvas(const QRect& clipping_region, bool emit_signal) {
-	QPainter strokes(&images_[(int) IMG_STROKES]);
-	QPainter mask(&images_[(int) IMG_MASK]);
+	QPainter strokes(&images_[(int) ImageType::IMG_STROKES]);
+	QPainter mask(&images_[(int) ImageType::IMG_MASK]);
 
 	strokes.setRenderHint(QPainter::Antialiasing);
 	mask.setRenderHint(QPainter::Antialiasing);
