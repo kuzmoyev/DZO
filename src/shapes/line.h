@@ -12,7 +12,7 @@
 
 class Line : public ShapeBase {
   public:
-	explicit Line(const QPen& pen);
+	Line();
 
   protected:
 	void doOnMouseDown(QPoint pos) override;
@@ -22,7 +22,7 @@ class Line : public ShapeBase {
 
   protected:
 	QRect doRect() const override;
-	void doPaint(QPainter& painter, const QPen& pen) const override;
+	void doPaint(QPainter& painter, ImageType role) const override;
 
   private:
 	bool initialized_;

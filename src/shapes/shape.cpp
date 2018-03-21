@@ -8,7 +8,6 @@
 
 #include <QDebug>
 
-ShapeBase::ShapeBase(QPen pen) : default_pen_(std::move(pen)) {}
 
 QRect ShapeBase::onMouseDown(QPoint pos) {
 	doOnMouseDown(pos);
@@ -36,10 +35,6 @@ QRect ShapeBase::rect() const {
 	return r;
 }
 
-void ShapeBase::paint(QPainter& painter) const {
-	paint(painter, default_pen_);
-}
-
-void ShapeBase::paint(QPainter& painter, const QPen& pen) const {
-	doPaint(painter, pen);
+void ShapeBase::paint(QPainter& painter, ImageType role) const {
+	doPaint(painter, role);
 }

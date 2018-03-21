@@ -13,9 +13,11 @@
 #include <QtGui/QPainter>
 #include <memory>
 
+#include "canvas/image_type.h"
+
 class ShapeBase {
   public:
-	explicit ShapeBase(QPen pen);
+	ShapeBase() = default;
 
 	QRect onMouseDown(QPoint pos);
 	QRect onMouseMove(QPoint pos);
@@ -24,8 +26,7 @@ class ShapeBase {
 	virtual bool initialized() const;
 
 	QRect rect() const;
-	void paint(QPainter& painter) const;
-	void paint(QPainter& painter, const QPen& pen) const;
+	void paint(QPainter& painter, ImageType role) const;
 
   protected:
 	virtual void doOnMouseDown(QPoint pos) = 0;
@@ -35,10 +36,7 @@ class ShapeBase {
 	virtual bool doInitialized() const = 0;
 
 	virtual QRect doRect() const = 0;
-	virtual void doPaint(QPainter& painter, const QPen& pen) const = 0;
-
-  private:
-	QPen default_pen_;
+	virtual void doPaint(QPainter& painter, ImageType role) const = 0;
 };
 
 using Shape = std::shared_ptr<ShapeBase>;
