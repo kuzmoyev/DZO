@@ -6,7 +6,7 @@
 
 #include "line.h"
 
-#include "utility.h"
+#include "include/utility.h"
 
 Line::Line() : initialized_(false) {}
 
@@ -29,18 +29,22 @@ QRect Line::doRect() const {
 }
 
 void Line::doPaint(QPainter& painter, ImageType role) const {
+	auto delta = end_ - start_;
+	QPen pen;
 	switch (role) {
 		case ImageType::IMG_BG:
 			return;
-		case ImageType::IMG_STROKES:
-			painter.setPen(QPen(QPen(QColor::fromRgb(54, 76, 85, 255))));
-			break;
-		case ImageType::IMG_MASK:
-			painter.setPen(QPen(Qt::black));
-			break;
 		case ImageType::IMG_COMPOSED:
 			return;
+		case ImageType::IMG_STROKES:
+			pen.setColor(colorFromDirection(delta.x(), delta.y()));
+			pen.setWidth(3);
+			break;
+		case ImageType::IMG_MASK:
+			pen.setColor(Qt::black);
+			break;
 	}
+	painter.setPen(pen);
 	painter.drawLine(start_, end_);
 }
 

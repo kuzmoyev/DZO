@@ -31,7 +31,7 @@ bool ShapeBase::initialized() const {
 }
 
 QRect ShapeBase::rect() const {
-	auto r = doRect().marginsAdded(QMargins(1, 1, 1, 1));
+	auto r = doRect().marginsAdded(QMargins(2, 2, 2, 2));
 	return r;
 }
 
