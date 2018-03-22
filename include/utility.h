@@ -24,4 +24,6 @@ QColor colorFromDirection(float delta_x, float delta_y) {
 	return QColor::fromRgbF((qreal) cos / 2 + 0.5f, (qreal) sin / 2 + 0.5f, 0.5f);
 }
 
+
+
 #endif //GRADIENT_PAINTER_UTILITY_H
