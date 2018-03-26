@@ -6,9 +6,9 @@
 
 #include "line.h"
 
-#include "utility.h"
+#include "include/utility.h"
 
-Line::Line(const QPen& pen) : ShapeBase(pen), initialized_(false) {}
+Line::Line() : initialized_(false) {}
 
 void Line::doOnMouseDown(QPoint pos) {
 	start_ = pos;
@@ -28,7 +28,22 @@ QRect Line::doRect() const {
 	return rectFrom2Points(start_, end_);
 }
 
-void Line::doPaint(QPainter& painter, const QPen& pen) const {
+void Line::doPaint(QPainter& painter, ImageType role) const {
+	auto delta = end_ - start_;
+	QPen pen;
+	switch (role) {
+		case ImageType::IMG_BG:
+			return;
+		case ImageType::IMG_COMPOSED:
+			return;
+		case ImageType::IMG_STROKES:
+			pen.setColor(colorFromDirection(delta.x(), delta.y()));
+			pen.setWidth(3);
+			break;
+		case ImageType::IMG_MASK:
+			pen.setColor(Qt::black);
+			break;
+	}
 	painter.setPen(pen);
 	painter.drawLine(start_, end_);
 }

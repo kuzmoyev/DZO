@@ -5,6 +5,7 @@
  */
 
 #include <QtCore/QMetaEnum>
+
 #include "canvas_model.h"
 
 CanvasModel::CanvasModel(QSize size) :
@@ -12,7 +13,7 @@ CanvasModel::CanvasModel(QSize size) :
 	setCanvasSize(size);
 }
 
-QImage CanvasModel::getImage(CanvasModel::ImageType type) {
+QImage CanvasModel::getImage(ImageType type) {
 	return images_[(int) type];
 }
 
@@ -62,8 +63,9 @@ void CanvasModel::onMouseUp(QPoint pos) {
 }
 
 void CanvasModel::updateCanvas(const QRect& clipping_region, bool emit_signal) {
-	QPainter strokes(&images_[(int) IMG_STROKES]);
-	QPainter mask(&images_[(int) IMG_MASK]);
+	//TODO Check clipping
+	QPainter strokes(&images_[(int) ImageType::IMG_STROKES]);
+	QPainter mask(&images_[(int) ImageType::IMG_MASK]);
 
 	strokes.setRenderHint(QPainter::Antialiasing);
 	mask.setRenderHint(QPainter::Antialiasing);
@@ -73,8 +75,8 @@ void CanvasModel::updateCanvas(const QRect& clipping_region, bool emit_signal) {
 
 	for (auto& s : shapes_) {
 		if (s->rect().intersects(clipping_region)) {
-			s->paint(strokes);
-			s->paint(mask, QPen(Qt::black));
+			s->paint(strokes, ImageType::IMG_STROKES);
+			s->paint(mask, ImageType::IMG_MASK);
 		}
 	}
 
@@ -85,6 +87,6 @@ void CanvasModel::updateCanvas(const QRect& clipping_region, bool emit_signal) {
 
 Shape CanvasModel::createShape() {
 	//TODO Use shape factory
-	return std::make_shared<Line>(QPen(QColor::fromRgb(54, 76, 85, 255)));
+	return std::make_shared<Line>();
 }
 

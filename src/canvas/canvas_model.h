@@ -17,17 +17,13 @@
 
 #include "shapes/shape.h"
 #include "shapes/line.h"
+#include "image_type.h"
 
 //TODO Start in a worker thread
 class CanvasModel : public QObject {
   Q_OBJECT
 
   public:
-	enum ImageType {
-		IMG_BG, IMG_STROKES, IMG_MASK, IMG_COMPOSED
-	};
-
-	Q_ENUM(ImageType)
 
 	explicit CanvasModel(QSize size);
 
