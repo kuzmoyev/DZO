@@ -1,0 +1,3 @@
+[submodule "thirdparty/amgcl"]
+	path = thirdparty/amgcl
+	url = git@github.com:ddemidov/amgcl.git
