@@ -14,6 +14,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 
 include_directories(include)
+add_subdirectory(thirdparty/amgcl)
 
 add_library(simple_poisson_solver lib/simple_poisson_solver/poisson.cpp)
 target_link_libraries(simple_poisson_solver Qt5::Core)
@@ -30,5 +31,5 @@ add_executable(gradient_gui
         src/canvas/canvas_view.cpp
         src/canvas/multi_canvas_view.cpp)
 
-target_link_libraries(gradient_gui Qt5::Widgets simple_poisson_solver)
+target_link_libraries(gradient_gui Qt5::Widgets simple_poisson_solver amgcl)
 target_include_directories(gradient_gui PRIVATE src)
