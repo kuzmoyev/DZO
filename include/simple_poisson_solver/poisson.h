@@ -10,7 +10,7 @@
 #include <QtGui/QBitmap>
 
 namespace simple_solver {
-    QImage poisson(const QImage background, const QImage source, const QBitmap mask);
+    QImage poisson(const QImage background, const QImage source, const QImage mask);
 
 };
 
