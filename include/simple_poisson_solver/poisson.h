@@ -12,7 +12,7 @@
 namespace simple_solver {
     QImage poisson(const QImage background, const QImage source, const QImage mask);
 
-};
+}
 
 
 #endif //GRADIENT_PAINTER_POISSON_H

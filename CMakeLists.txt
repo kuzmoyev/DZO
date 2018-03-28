@@ -16,8 +16,8 @@ set(CMAKE_AUTOUIC ON)
 include_directories(include)
 add_subdirectory(thirdparty/amgcl)
 
-add_library(simple_poisson_solver lib/simple_poisson_solver/poisson.cpp)
-target_link_libraries(simple_poisson_solver Qt5::Core)
+add_library(simple_poisson_solver SHARED lib/simple_poisson_solver/poisson.cpp)
+target_link_libraries(simple_poisson_solver Qt5::Core amgcl)
 target_include_directories(simple_poisson_solver PRIVATE include/simple_poisson_solver)
 
 add_executable(gradient_gui
