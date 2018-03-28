@@ -12,16 +12,18 @@ using namespace std;
 int main(int argc, char** argv) {
     QApplication app(argc, argv);
 
+    int imgId = 1;
+
     QImage source;
-    source.load("/home/kuzmovych/ClionProjects/DZO/src/source.png");
+    source.load("../src/imgs/source" + QString::number(imgId) + ".png");
     source = source.scaled(800, 600);
 
     QImage target;
-    target.load("/home/kuzmovych/ClionProjects/DZO/src/target.jpg");
+    target.load("../src/imgs/target" + QString::number(imgId) + ".jpg");
     target = target.scaled(800, 600);
 
     QImage mask;
-    mask.load("/home/kuzmovych/ClionProjects/DZO/src/mask.png");
+    mask.load("../src/imgs/mask" + QString::number(imgId) + ".png");
     mask = mask.scaled(800, 600);
 
     cout << "opened" << endl;
@@ -36,6 +38,8 @@ int main(int argc, char** argv) {
     myLabel.setFixedWidth(800);
 
     myLabel.show();
+
+    result.save("../src/imgs/result" + QString::number(imgId) + ".png");
 
     cout << "Showed" << endl;
 

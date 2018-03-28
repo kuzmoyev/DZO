@@ -29,8 +29,46 @@ namespace simple_solver {
 
     bool onBoundary(int x, int y, const QImage& mask) {
         return (x == 0 || x == mask.width() - 1 || y == 0 || y == mask.height() - 1) ||
-               (mask.pixel(x - 1, y) == WHITE || mask.pixel(x + 1, y) == WHITE) ||
-               (mask.pixel(x, y - 1) == WHITE || mask.pixel(x, y + 1) == WHITE);
+               (mask.pixel(x - 1, y) != WHITE || mask.pixel(x + 1, y) != WHITE) ||
+               (mask.pixel(x, y - 1) != WHITE || mask.pixel(x, y + 1) != WHITE);
+    }
+
+    int getterR(const QColor& c) {
+        return c.red();
+    }
+
+    int getterG(const QColor& c) {
+        return c.green();
+    }
+
+    int getterB(const QColor& c) {
+        return c.blue();
+    }
+
+    template <typename COLOR_GETTER>
+    int getGradientedColor(int x, int y, const QImage& source, const QImage& target, COLOR_GETTER colorGetter) {
+        int s = colorGetter(source.pixelColor(x, y));
+        int sxp = colorGetter(source.pixelColor(x + 1, y));
+        int sxm = colorGetter(source.pixelColor(x - 1, y));
+        int syp = colorGetter(source.pixelColor(x, y + 1));
+        int sym = colorGetter(source.pixelColor(x, y - 1));
+
+        int t = colorGetter(target.pixelColor(x, y));
+        int txp = colorGetter(target.pixelColor(x + 1, y));
+        int txm = colorGetter(target.pixelColor(x - 1, y));
+        int typ = colorGetter(target.pixelColor(x, y + 1));
+        int tym = colorGetter(target.pixelColor(x, y - 1));
+
+        int sdx = sxp + sxm - 2 * s;
+        int sdy = syp + sym - 2 * s;
+
+        int tdx = txp + txm - 2 * s;
+        int tdy = typ + tym - 2 * s;
+
+        if (sdx * sdx + sdy * sdy > tdx * tdx + tdy * tdy)
+            return s;
+        else
+            return t;
     }
 
 
@@ -158,110 +196,64 @@ namespace simple_solver {
     > PoissonSolver;
 
 
-    template <typename ValueType, typename IndexType, typename RhsType>
-    int sample_problem(
-            const std::vector<std::vector<ValueType>>& matrix,
-            std::vector<ValueType>& val,
-            std::vector<IndexType>& col,
-            std::vector<IndexType>& ptr,
-            std::vector<RhsType>& rhs
-    ) {
-        int n = int(matrix.size());
-
-        ptr.clear();
-        col.clear();
-        val.clear();
-        rhs.clear();
-
-        ptr.reserve(n + 1);
-        col.reserve(n * 3);
-        val.reserve(n * 3);
-        rhs.reserve(n);
-
-        ValueType one = amgcl::math::identity<ValueType>();
-
-        ptr.push_back(0);
-        for (int i = 0; i < n; ++i) {
-            for (int j = 0; j < n; j++) {
-                col.push_back(j);
-                val.push_back(matrix[i][j] * one);
-            }
-            ptr.push_back(static_cast<IndexType>(col.size()));
-            rhs[i] = amgcl::math::constant<RhsType>(rhs[i]);
-        }
-
-        return n;
-    }
-
-
     QImage poisson(const QImage target, const QImage source, const QImage mask) {
 
-        std::vector<std::vector<double>> matrix = {
-                {1,  -2, 1},
-                {2,  -6, 3},
-                {-4, 5,  1},
-        };
-        std::vector<int> ptrt;
-        std::vector<int> colt;
-        std::vector<double> valt;
-        std::vector<double> rhst = {14, 20, 32};
+        std::vector<int> ptr;
+        std::vector<int> col;
 
-        int Nt = sample_problem(matrix, valt, colt, ptrt, rhst);
+        std::vector<int> valR;
+        std::vector<int> valG;
+        std::vector<int> valB;
 
-        vector<double> solt(Nt, 0);
+        std::vector<int> rhsR;
+        std::vector<int> rhsG;
+        std::vector<int> rhsB;
 
-        int iterst;
-        double errort;
+        vector<pair<int, int>> pixels;
 
-        PoissonSolver solveT(boost::tie(Nt, ptrt, colt, valt));
-        boost::tie(iterst, errort) = solveT(rhst, solt);
-        cout << "T: error-" << errort << ", iters-" << iterst << endl;
+        ulong n = poisson(target, source, mask, ptr, col, valR, valG, valB, rhsR, rhsG, rhsB, pixels);
 
-        for (double s : solt)
-            cout << s << ", ";
-        cout << endl;
+        cout << "built matrix." << endl;
 
 
-//        std::vector<int> ptr;
-//        std::vector<int> col;
-//
-//        std::vector<int> valR;
-//        std::vector<int> valG;
-//        std::vector<int> valB;
-//
-//        std::vector<int> rhsR;
-//        std::vector<int> rhsG;
-//        std::vector<int> rhsB;
-//
-//        vector<pair<int, int>> pixels;
-//
-//        ulong n = poisson(target, source, mask, ptr, col, valR, valG, valB, rhsR, rhsG, rhsB, pixels);
-//
-//        cout << "built matrix." << endl;
-//
-//
-//        int iters;
-//        double error;
-//
-//        PoissonSolver solveR(boost::tie(n, ptr, col, valR));
-//        PoissonSolver solveG(boost::tie(n, ptr, col, valG));
-//        PoissonSolver solveB(boost::tie(n, ptr, col, valB));
-//
-//        vector<int> R(n, 0);
-//        vector<int> G(n, 0);
-//        vector<int> B(n, 0);
-//
-//
-//        boost::tie(iters, error) = solveR(rhsR, R);
-//        cout << "R: error-" << error << ", iters-" << iters << endl;
-//
-//        boost::tie(iters, error) = solveG(rhsG, G);
-//        cout << "G: error-" << error << ", iters-" << iters << endl;
-//
-//        boost::tie(iters, error) = solveB(rhsB, B);
-//        cout << "B: error-" << error << ", iters-" << iters << endl;
+        int iters;
+        double error;
+
+        PoissonSolver::params prm;
+        prm.solver.maxiter = 2;
+
+        PoissonSolver solveR(boost::tie(n, ptr, col, valR), prm);
+        PoissonSolver solveG(boost::tie(n, ptr, col, valG), prm);
+        PoissonSolver solveB(boost::tie(n, ptr, col, valB), prm);
+
+        vector<double> R(n, 0);
+        vector<double> G(n, 0);
+        vector<double> B(n, 0);
 
 
-        return source;
+        boost::tie(iters, error) = solveR(rhsR, R);
+        cout << "R: error-" << error << ", iters-" << iters << endl;
+
+        boost::tie(iters, error) = solveG(rhsG, G);
+        cout << "G: error-" << error << ", iters-" << iters << endl;
+
+        boost::tie(iters, error) = solveB(rhsB, B);
+        cout << "B: error-" << error << ", iters-" << iters << endl;
+
+
+        QImage result = target.copy();
+
+        for (uint i = 0; i < pixels.size(); i++) {
+            int r = max(min(int(R[i]), 255), 0);
+            int g = max(min(int(G[i]), 255), 0);
+            int b = max(min(int(B[i]), 255), 0);
+
+            QColor c(r, g, b);
+            int x = pixels[i].first;
+            int y = pixels[i].second;
+            result.setPixel(x, y, c.rgb());
+        }
+
+        return result;
     }
 }
