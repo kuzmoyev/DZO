@@ -2,6 +2,7 @@
 #define SIDEBAR_H
 
 #include <QWidget>
+#include "src/canvas/canvas_model.h"
 
 namespace Ui {
 	class Sidebar;
@@ -11,7 +12,7 @@ class Sidebar : public QWidget {
   Q_OBJECT
 
   public:
-	explicit Sidebar(QSize canvas_size, QWidget* parent = nullptr);
+	explicit Sidebar(CanvasModel& model, QWidget* parent = nullptr);
 	~Sidebar() override;
 
 
@@ -28,14 +29,16 @@ class Sidebar : public QWidget {
 	void setUndoState(bool);
 	void setRedoState(bool);
 	void setRunState(bool);
-	void setMainColor(QColor);
-	void setAltColor(QColor);
+	void updateColors(QColor main, QColor alt);
 
   private slots:
 	void sizeLeChanged();
+	void mainColorClicked();
+	void altColorClicked();
 
   private:
 	Ui::Sidebar* ui;
+	CanvasModel& model_;
 };
 
 #endif // SIDEBAR_H

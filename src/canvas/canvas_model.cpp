@@ -5,11 +5,13 @@
  */
 
 #include <QtCore/QMetaEnum>
+#include <QDebug>
 
 #include "canvas_model.h"
 
-CanvasModel::CanvasModel(QSize size) :
-		images_(QMetaEnum::fromType<ImageType>().keyCount()) {
+CanvasModel::CanvasModel(QSize size, const QColor& main, const QColor& alt) :
+		images_(QMetaEnum::fromType<ImageType>().keyCount()),
+		main_color_(main), alt_color_(alt) {
 	setCanvasSize(size);
 }
 
@@ -19,6 +21,14 @@ QImage CanvasModel::getImage(ImageType type) {
 
 QSize CanvasModel::getCanvasSize() const {
 	return size_;
+}
+
+const QColor& CanvasModel::getMainColor() const {
+	return main_color_;
+}
+
+const QColor& CanvasModel::getAltColor() const {
+	return alt_color_;
 }
 
 void CanvasModel::setCanvasSize(QSize size) {
@@ -62,21 +72,42 @@ void CanvasModel::onMouseUp(QPoint pos) {
 	}
 }
 
+void CanvasModel::setMainColor(QColor color) {
+	if (main_color_ != color) {
+		main_color_ = color;
+		emit colorsUpdated(main_color_, alt_color_);
+	}
+}
+void CanvasModel::setAltColor(QColor color) {
+	if (main_color_ != color) {
+		alt_color_ = color;
+		emit colorsUpdated(main_color_, alt_color_);
+	}
+}
+
 void CanvasModel::updateCanvas(const QRect& clipping_region, bool emit_signal) {
 	//TODO Check clipping
 	QPainter strokes(&images_[(int) ImageType::IMG_STROKES]);
 	QPainter mask(&images_[(int) ImageType::IMG_MASK]);
+	QPainter bg(&images_[(int) ImageType::IMG_BG]);
 
 	strokes.setRenderHint(QPainter::Antialiasing);
 	mask.setRenderHint(QPainter::Antialiasing);
+	bg.setRenderHint(QPainter::Antialiasing);
+
+	strokes.setClipRect(clipping_region);
+	mask.setClipRect(clipping_region);
+	bg.setClipRect(clipping_region);
 
 	strokes.fillRect(clipping_region, Qt::white);
 	mask.fillRect(clipping_region, Qt::white);
+	bg.fillRect(clipping_region, Qt::white);
 
 	for (auto& s : shapes_) {
 		if (s->rect().intersects(clipping_region)) {
 			s->paint(strokes, ImageType::IMG_STROKES);
 			s->paint(mask, ImageType::IMG_MASK);
+			s->paint(bg, ImageType::IMG_BG);
 		}
 	}
 
@@ -87,6 +118,6 @@ void CanvasModel::updateCanvas(const QRect& clipping_region, bool emit_signal) {
 
 Shape CanvasModel::createShape() {
 	//TODO Use shape factory
-	return std::make_shared<Line>();
+	return std::make_shared<Line>(main_color_);
 }
 

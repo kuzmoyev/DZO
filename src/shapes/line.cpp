@@ -8,7 +8,7 @@
 
 #include "include/utility.h"
 
-Line::Line() : initialized_(false) {}
+Line::Line(const QColor& color) : ShapeBase(color), initialized_(false) {}
 
 void Line::doOnMouseDown(QPoint pos) {
 	start_ = pos;
@@ -33,7 +33,10 @@ void Line::doPaint(QPainter& painter, ImageType role) const {
 	QPen pen;
 	switch (role) {
 		case ImageType::IMG_BG:
-			return;
+			pen.setColor(main_color_);
+			pen.setWidth(3);
+			break;
+
 		case ImageType::IMG_COMPOSED:
 			return;
 		case ImageType::IMG_STROKES:
@@ -44,6 +47,7 @@ void Line::doPaint(QPainter& painter, ImageType role) const {
 			pen.setColor(Qt::black);
 			break;
 	}
+
 	painter.setPen(pen);
 	painter.drawLine(start_, end_);
 }

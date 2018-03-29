@@ -5,6 +5,7 @@
 #include <QThread>
 
 #include "src/canvas/canvas_model.h"
+
 #include "sidebar.h"
 
 namespace Ui {
@@ -18,7 +19,6 @@ class MainWindow : public QMainWindow {
 	explicit MainWindow(QWidget* parent = nullptr);
 	~MainWindow() override;
 
-  public slots:
 
   private:
 	Ui::MainWindow* ui;
