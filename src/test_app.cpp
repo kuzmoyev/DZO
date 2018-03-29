@@ -25,11 +25,11 @@ int main(int argc, char** argv) {
 	mask.load("../src/imgs/mask" + QString::number(imgId) + ".png");
 	mask = mask.scaled(800, 600);
 
-	cout << "opened" << endl;
+	qDebug() << "opened";
 
 	QImage result = simple_solver::poisson(target, source, mask);
 
-	cout << "poissoned" << endl;
+	qDebug() << "poissoned";
 
 	QLabel myLabel;
 	myLabel.setPixmap(QPixmap::fromImage(result));
@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
 
 	result.save("../src/imgs/result" + QString::number(imgId) + ".png");
 
-	cout << "Showed" << endl;
+	qDebug() << "showed";
 
 	return app.exec();
 }

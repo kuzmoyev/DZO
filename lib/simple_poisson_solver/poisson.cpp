@@ -1,4 +1,4 @@
-#include <iostream>
+#include <tuple>
 #include <utility>
 
 #include <amgcl/make_solver.hpp>
@@ -8,6 +8,8 @@
 #include <amgcl/relaxation/spai0.hpp>
 #include <amgcl/adapter/crs_tuple.hpp>
 
+#include <QDebug>
+
 #include "simple_poisson_solver/poisson.h"
 
 using namespace std;
@@ -16,7 +18,8 @@ namespace simple_solver {
 
     QRgb WHITE = 0xffffffff;
 
-    void getMaskPixels(const QImage& img, vector<pair<int, int>>& pixels, map<pair<int, int>, int>& pixelsColumn) {
+    void calcMaskPixels(const QImage& img, vector<pair<int, int>>& pixels,
+                        map<pair<int, int>, int>& pixelsColumn) {
         for (int x = 0; x < img.width(); x++) {
             for (int y = 0; y < img.height(); y++) {
                 if (img.pixel(x, y) == WHITE) {
@@ -45,8 +48,10 @@ namespace simple_solver {
         return c.blue();
     }
 
-    template <typename COLOR_GETTER>
-    int getGradientedColor(int x, int y, const QImage& source, const QImage& target, COLOR_GETTER colorGetter) {
+    template <typename ColorGetter>
+    int getGradientedColor(int x, int y,
+						   const QImage& source, const QImage& target,
+						   ColorGetter colorGetter) {
         int s = colorGetter(source.pixelColor(x, y));
         int sxp = colorGetter(source.pixelColor(x + 1, y));
         int sxm = colorGetter(source.pixelColor(x - 1, y));
@@ -89,7 +94,7 @@ namespace simple_solver {
             vector<pair<int, int>>& pixels
     ) {
         map<pair<int, int>, int> pixelsColumn;
-        getMaskPixels(mask, pixels, pixelsColumn);
+        calcMaskPixels(mask, pixels, pixelsColumn);
 
 
         ulong n = pixels.size();
@@ -196,48 +201,46 @@ namespace simple_solver {
     > PoissonSolver;
 
 
-    QImage poisson(const QImage target, const QImage source, const QImage mask) {
+    QImage poisson(const QImage& target, const QImage& source, const QImage& mask) {
 
-        std::vector<int> ptr;
-        std::vector<int> col;
+        vector<int> ptr;
+        vector<int> col;
 
-        std::vector<int> valR;
-        std::vector<int> valG;
-        std::vector<int> valB;
+        vector<int> valR;
+        vector<int> valG;
+        vector<int> valB;
 
-        std::vector<int> rhsR;
-        std::vector<int> rhsG;
-        std::vector<int> rhsB;
+        vector<int> rhsR;
+        vector<int> rhsG;
+        vector<int> rhsB;
 
         vector<pair<int, int>> pixels;
 
         ulong n = poisson(target, source, mask, ptr, col, valR, valG, valB, rhsR, rhsG, rhsB, pixels);
 
-        cout << "built matrix." << endl;
-
-
-        int iters;
-        double error;
+        qDebug() << "built matrix";
 
         PoissonSolver::params prm;
         prm.solver.maxiter = 2;
 
-        PoissonSolver solveR(boost::tie(n, ptr, col, valR), prm);
-        PoissonSolver solveG(boost::tie(n, ptr, col, valG), prm);
-        PoissonSolver solveB(boost::tie(n, ptr, col, valB), prm);
+        PoissonSolver solveR(tie(n, ptr, col, valR), prm);
+        PoissonSolver solveG(tie(n, ptr, col, valG), prm);
+        PoissonSolver solveB(tie(n, ptr, col, valB), prm);
 
         vector<double> R(n, 0);
         vector<double> G(n, 0);
         vector<double> B(n, 0);
 
+		int iters;
+		double error;
 
-        boost::tie(iters, error) = solveR(rhsR, R);
+        tie(iters, error) = solveR(rhsR, R);
         cout << "R: error-" << error << ", iters-" << iters << endl;
 
-        boost::tie(iters, error) = solveG(rhsG, G);
+        tie(iters, error) = solveG(rhsG, G);
         cout << "G: error-" << error << ", iters-" << iters << endl;
 
-        boost::tie(iters, error) = solveB(rhsB, B);
+        tie(iters, error) = solveB(rhsB, B);
         cout << "B: error-" << error << ", iters-" << iters << endl;
 
 
