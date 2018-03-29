@@ -6,6 +6,7 @@
 
 #include <QtCore/QMetaEnum>
 #include <QDebug>
+#include <include/simple_poisson_solver/poisson.h>
 
 #include "canvas_model.h"
 
@@ -15,11 +16,15 @@ CanvasModel::CanvasModel(QSize size, const QColor& main, const QColor& alt) :
 	setCanvasSize(size);
 }
 
-QImage CanvasModel::getImage(ImageType type) {
+const QImage& CanvasModel::getImage(ImageType type) const {
 	return images_[(int) type];
 }
 
-QSize CanvasModel::getCanvasSize() const {
+QImage& CanvasModel::getImage(ImageType type) {
+	return images_[(int) type];
+}
+
+const QSize& CanvasModel::getCanvasSize() const {
 	return size_;
 }
 
@@ -83,6 +88,15 @@ void CanvasModel::setAltColor(QColor color) {
 		alt_color_ = color;
 		emit colorsUpdated(main_color_, alt_color_);
 	}
+}
+
+void CanvasModel::calculatePoisson() {
+	//TODO Run in separate thread
+	getImage(ImageType::IMG_COMPOSED) = simple_solver::poisson(
+			getImage(ImageType::IMG_BG),
+			getImage(ImageType::IMG_COMPOSED),
+			getImage(ImageType::IMG_MASK));
+	emit canvasUpdated(getImage(ImageType::IMG_COMPOSED).rect());
 }
 
 void CanvasModel::updateCanvas(const QRect& clipping_region, bool emit_signal) {

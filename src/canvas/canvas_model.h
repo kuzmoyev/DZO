@@ -26,8 +26,9 @@ class CanvasModel : public QObject {
   public:
 	explicit CanvasModel(QSize size, const QColor& main, const QColor& alt);
 
-	QImage getImage(ImageType type);
-	QSize getCanvasSize() const;
+	const QImage& getImage(ImageType type) const;
+	QImage& getImage(ImageType type);
+	const QSize& getCanvasSize() const;
 	const QColor& getMainColor() const ;
 	const QColor& getAltColor() const ;
 
@@ -46,6 +47,7 @@ class CanvasModel : public QObject {
 	void onMouseUp(QPoint pos);
 	void setMainColor(QColor);
 	void setAltColor(QColor);
+	void calculatePoisson();
 
   private:
 	void updateCanvas(const QRect& clipping_region, bool emit_signal);
