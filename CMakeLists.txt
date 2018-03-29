@@ -33,3 +33,6 @@ add_executable(gradient_gui
 
 target_link_libraries(gradient_gui Qt5::Widgets simple_poisson_solver amgcl)
 target_include_directories(gradient_gui PRIVATE src)
+
+add_executable(test_app src/test_app.cpp)
+target_link_libraries(test_app Qt5::Widgets simple_poisson_solver amgcl)
