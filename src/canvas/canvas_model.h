@@ -53,6 +53,7 @@ class CanvasModel : public QObject {
 
 	QVector<QImage> images_;
 	QVector<Shape> shapes_;
+
 	QSize size_;
 	QColor main_color_;
 	QColor alt_color_;

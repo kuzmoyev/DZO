@@ -89,17 +89,25 @@ void CanvasModel::updateCanvas(const QRect& clipping_region, bool emit_signal) {
 	//TODO Check clipping
 	QPainter strokes(&images_[(int) ImageType::IMG_STROKES]);
 	QPainter mask(&images_[(int) ImageType::IMG_MASK]);
+	QPainter bg(&images_[(int) ImageType::IMG_BG]);
 
 	strokes.setRenderHint(QPainter::Antialiasing);
 	mask.setRenderHint(QPainter::Antialiasing);
+	bg.setRenderHint(QPainter::Antialiasing);
+
+	strokes.setClipRect(clipping_region);
+	mask.setClipRect(clipping_region);
+	bg.setClipRect(clipping_region);
 
 	strokes.fillRect(clipping_region, Qt::white);
 	mask.fillRect(clipping_region, Qt::white);
+	bg.fillRect(clipping_region, Qt::white);
 
 	for (auto& s : shapes_) {
 		if (s->rect().intersects(clipping_region)) {
 			s->paint(strokes, ImageType::IMG_STROKES);
 			s->paint(mask, ImageType::IMG_MASK);
+			s->paint(bg, ImageType::IMG_BG);
 		}
 	}
 
@@ -110,6 +118,6 @@ void CanvasModel::updateCanvas(const QRect& clipping_region, bool emit_signal) {
 
 Shape CanvasModel::createShape() {
 	//TODO Use shape factory
-	return std::make_shared<Line>();
+	return std::make_shared<Line>(main_color_);
 }
 
