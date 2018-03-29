@@ -81,14 +81,18 @@ void Sidebar::sizeLeChanged() {
 }
 
 void Sidebar::mainColorClicked() {
-	auto color = QColorDialog::getColor(model_.getMainColor(), this, "Select main color");
+	auto color = QColorDialog::getColor(model_.getMainColor(), this,
+										"Select main color",
+										QColorDialog::DontUseNativeDialog);
 	if (!color.isValid())
 		return;
 	emit mainColorChanged(color);
 }
 
 void Sidebar::altColorClicked() {
-	auto color = QColorDialog::getColor(model_.getAltColor(), this, "Select alt color");
+	auto color = QColorDialog::getColor(model_.getAltColor(), this,
+										"Select alt color",
+										QColorDialog::DontUseNativeDialog);
 	if (!color.isValid())
 		return;
 	emit altColorChanged(color);
