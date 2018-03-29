@@ -12,7 +12,7 @@
 
 class Line : public ShapeBase {
   public:
-	Line();
+	explicit Line(const QColor& color);
 
   protected:
 	void doOnMouseDown(QPoint pos) override;

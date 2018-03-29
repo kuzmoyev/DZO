@@ -17,7 +17,7 @@
 
 class ShapeBase {
   public:
-	ShapeBase() = default;
+	ShapeBase(const QColor& main_color);
 
 	QRect onMouseDown(QPoint pos);
 	QRect onMouseMove(QPoint pos);
@@ -37,6 +37,8 @@ class ShapeBase {
 
 	virtual QRect doRect() const = 0;
 	virtual void doPaint(QPainter& painter, ImageType role) const = 0;
+
+	QColor main_color_;
 };
 
 using Shape = std::shared_ptr<ShapeBase>;

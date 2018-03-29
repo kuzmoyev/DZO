@@ -1,6 +1,7 @@
 #include <Qt>
 #include <QtWidgets/QGridLayout>
 #include <QtWidgets/QLabel>
+#include <QSizePolicy>
 
 #include "multi_canvas_view.h"
 #include "canvas_view.h"
@@ -8,6 +9,8 @@
 MultiCanvasView::MultiCanvasView(CanvasModel& model, QWidget* parent) :
 		QWidget(parent), model_(model) {
 	auto grid = new QGridLayout;
+	grid->setSizeConstraint(QLayout::SetFixedSize);
+
 	grid->addWidget(new QLabel("Strokes"), 0, 0, Qt::AlignCenter);
 	grid->addWidget(new CanvasView(model, ImageType::IMG_STROKES), 1, 0);
 

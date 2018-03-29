@@ -8,6 +8,7 @@
 
 #include <QDebug>
 
+ShapeBase::ShapeBase(const QColor& main_color) : main_color_(main_color) {}
 
 QRect ShapeBase::onMouseDown(QPoint pos) {
 	doOnMouseDown(pos);
