@@ -24,17 +24,19 @@ class CanvasModel : public QObject {
   Q_OBJECT
 
   public:
-
-	explicit CanvasModel(QSize size);
+	explicit CanvasModel(QSize size, const QColor& main, const QColor& alt);
 
 	QImage getImage(ImageType type);
 	QSize getCanvasSize() const;
+	const QColor& getMainColor() const ;
+	const QColor& getAltColor() const ;
 
   signals:
 	void canvasUpdated(QRect bounds);
 	void canvasSizeChanged(QSize size);
 	void startedPainting();
 	void stoppedPainting();
+	void colorsUpdated(QColor main, QColor alt);
 
   public slots:
 	// void setShapeFactory();
@@ -42,6 +44,8 @@ class CanvasModel : public QObject {
 	void onMouseDown(QPoint pos);
 	void onMouseMove(QPoint pos);
 	void onMouseUp(QPoint pos);
+	void setMainColor(QColor);
+	void setAltColor(QColor);
 
   private:
 	void updateCanvas(const QRect& clipping_region, bool emit_signal);
@@ -50,6 +54,8 @@ class CanvasModel : public QObject {
 	QVector<QImage> images_;
 	QVector<Shape> shapes_;
 	QSize size_;
+	QColor main_color_;
+	QColor alt_color_;
 };
 
 

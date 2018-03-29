@@ -5,11 +5,13 @@
  */
 
 #include <QtCore/QMetaEnum>
+#include <QDebug>
 
 #include "canvas_model.h"
 
-CanvasModel::CanvasModel(QSize size) :
-		images_(QMetaEnum::fromType<ImageType>().keyCount()) {
+CanvasModel::CanvasModel(QSize size, const QColor& main, const QColor& alt) :
+		images_(QMetaEnum::fromType<ImageType>().keyCount()),
+		main_color_(main), alt_color_(alt) {
 	setCanvasSize(size);
 }
 
@@ -19,6 +21,14 @@ QImage CanvasModel::getImage(ImageType type) {
 
 QSize CanvasModel::getCanvasSize() const {
 	return size_;
+}
+
+const QColor& CanvasModel::getMainColor() const {
+	return main_color_;
+}
+
+const QColor& CanvasModel::getAltColor() const {
+	return alt_color_;
 }
 
 void CanvasModel::setCanvasSize(QSize size) {
@@ -59,6 +69,19 @@ void CanvasModel::onMouseUp(QPoint pos) {
 	updateCanvas(rect, true);
 	if (shapes_.back()->initialized()) {
 		emit stoppedPainting();
+	}
+}
+
+void CanvasModel::setMainColor(QColor color) {
+	if (main_color_ != color) {
+		main_color_ = color;
+		emit colorsUpdated(main_color_, alt_color_);
+	}
+}
+void CanvasModel::setAltColor(QColor color) {
+	if (main_color_ != color) {
+		alt_color_ = color;
+		emit colorsUpdated(main_color_, alt_color_);
 	}
 }
 
