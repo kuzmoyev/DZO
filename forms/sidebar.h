@@ -20,7 +20,6 @@ class Sidebar : public QWidget {
 	void updatedCanvasSize(QSize);
 	void clickedUndo();
 	void clickedRedo();
-	void clickedRun();
 	void mainColorChanged(QColor);
 	void altColorChanged(QColor);
 

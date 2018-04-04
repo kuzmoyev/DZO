@@ -26,6 +26,9 @@ Sidebar::Sidebar(CanvasModel& model, QWidget* parent) :
 	connect(&model_, &CanvasModel::colorsUpdated, this, &Sidebar::updateColors);
 	connect(this, &Sidebar::mainColorChanged, &model_, &CanvasModel::setMainColor);
 	connect(this, &Sidebar::altColorChanged, &model_, &CanvasModel::setAltColor);
+
+	ui->runBtn->setEnabled(true);
+	connect(ui->runBtn, &QPushButton::clicked, &model_, &CanvasModel::calculatePoisson);
 }
 
 Sidebar::~Sidebar() {

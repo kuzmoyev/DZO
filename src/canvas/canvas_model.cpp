@@ -106,7 +106,6 @@ void CanvasModel::updateCanvas(const QRect& clipping_region, bool emit_signal) {
 	QPainter bg(&images_[(int) ImageType::IMG_BG]);
 
 	strokes.setRenderHint(QPainter::Antialiasing);
-	mask.setRenderHint(QPainter::Antialiasing);
 	bg.setRenderHint(QPainter::Antialiasing);
 
 	strokes.setClipRect(clipping_region);
