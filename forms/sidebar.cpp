@@ -18,14 +18,18 @@ Sidebar::Sidebar(CanvasModel& model, QWidget* parent) :
 	connect(ui->canvasXSizeLe, &QLineEdit::returnPressed, this, &Sidebar::sizeLeChanged);
 	connect(ui->canvasYSizeLe, &QLineEdit::returnPressed, this, &Sidebar::sizeLeChanged);
 
-	ui->mainColorBtn->setEnabled(true);
-	//ui->altColorBtn->setEnabled(true);
+	mainColorBtn = new ClickableLabel();
+	altColorBtn = new ClickableLabel();
+	ui->colorBtnLayout->addWidget(mainColorBtn);
+	ui->colorBtnLayout->addWidget(altColorBtn);
+	mainColorBtn->setToolTip(tr("Set Main Color"));
+	altColorBtn->setToolTip(tr("Set Alternative Color"));
 	updateColors(model.getMainColor(), model.getAltColor());
-	connect(ui->mainColorBtn, &QPushButton::clicked, this, &Sidebar::mainColorClicked);
-	connect(ui->altColorBtn, &QPushButton::clicked, this, &Sidebar::altColorClicked);
-	connect(&model_, &CanvasModel::colorsUpdated, this, &Sidebar::updateColors);
+	connect(mainColorBtn, &ClickableLabel::clicked, this, &Sidebar::mainColorClicked);
+	connect(altColorBtn, &ClickableLabel::clicked, this, &Sidebar::altColorClicked);
 	connect(this, &Sidebar::mainColorChanged, &model_, &CanvasModel::setMainColor);
 	connect(this, &Sidebar::altColorChanged, &model_, &CanvasModel::setAltColor);
+	connect(&model_, &CanvasModel::colorsUpdated, this, &Sidebar::updateColors);
 
 	ui->runBtn->setEnabled(true);
 	connect(ui->runBtn, &QPushButton::clicked, &model_, &CanvasModel::calculatePoisson);
@@ -53,8 +57,8 @@ void Sidebar::setRunState(bool on) {
 }
 
 void Sidebar::updateColors(QColor main, QColor alt) {
-	ui->mainColorLabel->setStyleSheet("QLabel {background-color:" + main.name() + "}");
-	ui->altColorLabel->setStyleSheet("QLabel {background-color:" + alt.name() + "}");
+	mainColorBtn->setStyleSheet("QLabel {background-color:" + main.name() + "}");
+	altColorBtn->setStyleSheet("QLabel {background-color:" + alt.name() + "}");
 }
 
 

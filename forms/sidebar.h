@@ -2,6 +2,7 @@
 #define SIDEBAR_H
 
 #include <QWidget>
+#include <src/gui/ClickableLabel.h>
 #include "src/canvas/canvas_model.h"
 
 namespace Ui {
@@ -38,6 +39,8 @@ class Sidebar : public QWidget {
   private:
 	Ui::Sidebar* ui;
 	CanvasModel& model_;
+	ClickableLabel* mainColorBtn;
+	ClickableLabel* altColorBtn;
 };
 
 #endif // SIDEBAR_H
