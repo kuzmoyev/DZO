@@ -15,6 +15,8 @@
 
 #include "canvas/image_type.h"
 
+constexpr int STROKE_WIDTH = 5;
+
 class ShapeBase {
   public:
 	ShapeBase(const QColor& main_color);

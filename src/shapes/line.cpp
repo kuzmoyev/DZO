@@ -34,14 +34,15 @@ void Line::doPaint(QPainter& painter, ImageType role) const {
 	switch (role) {
 		case ImageType::IMG_BG:
 			pen.setColor(main_color_);
-			pen.setWidth(3);
+			pen.setWidth(STROKE_WIDTH);
 			break;
 
 		case ImageType::IMG_COMPOSED:
 			return;
+
 		case ImageType::IMG_STROKES:
 			pen.setColor(colorFromDirection(delta.x(), delta.y()));
-			pen.setWidth(3);
+			pen.setWidth(STROKE_WIDTH);
 			break;
 		case ImageType::IMG_MASK:
 			pen.setColor(Qt::black);
