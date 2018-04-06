@@ -1,12 +1,4 @@
-/** @file line.h
- *  @brief
- *
- *  @author Viacheslav Kroilov (metopa) <slavakroilov@gmail.com>
- */
-
-#ifndef GRADIENT_PAINTER_LINE_H
-#define GRADIENT_PAINTER_LINE_H
-
+#pragma once
 
 #include "shape.h"
 
@@ -22,7 +14,7 @@ class Line : public ShapeBase {
 
   protected:
 	QRect doRect() const override;
-	void doPaint(QPainter& painter, ImageType role) const override;
+	void doPaint(QPainter& painter, QPen& pen, ImageType role) const override;
 
   private:
 	bool initialized_;
@@ -30,5 +22,3 @@ class Line : public ShapeBase {
 	QPoint end_;
 };
 
-
-#endif //GRADIENT_PAINTER_LINE_H

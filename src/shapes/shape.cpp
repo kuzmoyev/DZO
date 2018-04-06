@@ -1,9 +1,3 @@
-/** @file shape.cpp
- *  @brief
- *
- *  @author Viacheslav Kroilov (metopa) <slavakroilov@gmail.com>
- */
-
 #include "shape.h"
 
 #include <QDebug>
@@ -32,10 +26,29 @@ bool ShapeBase::initialized() const {
 }
 
 QRect ShapeBase::rect() const {
-	auto r = doRect().marginsAdded(QMargins(STROKE_WIDTH, STROKE_WIDTH, STROKE_WIDTH, STROKE_WIDTH));
-	return r;
+	return doRect().marginsAdded(QMargins(STROKE_WIDTH, STROKE_WIDTH, STROKE_WIDTH, STROKE_WIDTH));
 }
 
 void ShapeBase::paint(QPainter& painter, ImageType role) const {
-	doPaint(painter, role);
+	QPen pen;
+	switch (role) {
+		case ImageType::IMG_BG:
+			pen.setColor(main_color_);
+			pen.setWidth(STROKE_WIDTH);
+			break;
+
+		case ImageType::IMG_COMPOSED:
+			return;
+
+		case ImageType::IMG_STROKES:
+			pen.setColor(Qt::darkGray);
+			pen.setWidth(STROKE_WIDTH);
+			break;
+		case ImageType::IMG_MASK:
+			pen.setColor(Qt::black);
+			break;
+	}
+
+	painter.setPen(pen);
+	doPaint(painter, pen, role);
 }

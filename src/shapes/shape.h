@@ -1,19 +1,11 @@
-/** @file shape.h
- *  @brief
- *
- *  @author Viacheslav Kroilov (metopa) <slavakroilov@gmail.com>
- */
-
-#ifndef GRADIENT_PAINTER_SHAPE_H
-#define GRADIENT_PAINTER_SHAPE_H
-
+#pragma once
 
 #include <QtCore/QRect>
 #include <QtGui/QColor>
 #include <QtGui/QPainter>
 #include <memory>
 
-#include "canvas/image_type.h"
+#include "canvas/enums.h"
 
 constexpr int STROKE_WIDTH = 5;
 
@@ -38,12 +30,10 @@ class ShapeBase {
 	virtual bool doInitialized() const = 0;
 
 	virtual QRect doRect() const = 0;
-	virtual void doPaint(QPainter& painter, ImageType role) const = 0;
+	virtual void doPaint(QPainter& painter, QPen& pen, ImageType role) const = 0;
 
 	QColor main_color_;
 };
 
 using Shape = std::shared_ptr<ShapeBase>;
 
-
-#endif //GRADIENT_PAINTER_SHAPE_H

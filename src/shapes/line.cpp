@@ -1,9 +1,3 @@
-/** @file line.cpp
- *  @brief
- *
- *  @author Viacheslav Kroilov (metopa) <slavakroilov@gmail.com>
- */
-
 #include "line.h"
 
 #include "include/utility.h"
@@ -28,28 +22,13 @@ QRect Line::doRect() const {
 	return rectFrom2Points(start_, end_);
 }
 
-void Line::doPaint(QPainter& painter, ImageType role) const {
+void Line::doPaint(QPainter& painter, QPen& pen, ImageType role) const {
 	auto delta = end_ - start_;
-	QPen pen;
-	switch (role) {
-		case ImageType::IMG_BG:
-			pen.setColor(main_color_);
-			pen.setWidth(STROKE_WIDTH);
-			break;
-
-		case ImageType::IMG_COMPOSED:
-			return;
-
-		case ImageType::IMG_STROKES:
-			pen.setColor(colorFromDirection(delta.x(), delta.y()));
-			pen.setWidth(STROKE_WIDTH);
-			break;
-		case ImageType::IMG_MASK:
-			pen.setColor(Qt::black);
-			break;
+	if (role == ImageType::IMG_STROKES) {
+		pen.setColor(colorFromDirection(delta.x(), delta.y()));
+		painter.setPen(pen);
 	}
 
-	painter.setPen(pen);
 	painter.drawLine(start_, end_);
 }
 
