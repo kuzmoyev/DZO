@@ -26,10 +26,10 @@ add_executable(gradient_gui
         src/shapes/line.cpp
         forms/mainwindow.cpp
         forms/sidebar.cpp
-        src/canvas/image_type.h
+        src/canvas/enums.h
         src/canvas/canvas_model.cpp
         src/canvas/canvas_view.cpp
-        src/canvas/multi_canvas_view.cpp src/gui/ClickableLabel.cpp src/gui/ClickableLabel.h)
+        src/canvas/multi_canvas_view.cpp src/gui/ClickableLabel.cpp src/gui/ClickableLabel.h src/shapes/rectangle.cpp src/shapes/rectangle.h)
 
 target_link_libraries(gradient_gui Qt5::Widgets simple_poisson_solver amgcl)
 target_include_directories(gradient_gui PRIVATE src)

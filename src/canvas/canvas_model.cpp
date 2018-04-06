@@ -6,13 +6,16 @@
 
 #include <QtCore/QMetaEnum>
 #include <QDebug>
-#include <include/simple_poisson_solver/poisson.h>
+
+#include "simple_poisson_solver/poisson.h"
 
 #include "canvas_model.h"
+#include "shapes/line.h"
+#include "shapes/rectangle.h"
 
 CanvasModel::CanvasModel(QSize size, const QColor& main, const QColor& alt) :
 		images_(QMetaEnum::fromType<ImageType>().keyCount()),
-		main_color_(main), alt_color_(alt) {
+		main_color_(main), alt_color_(alt), next_shape_(ShapeType::LINE) {
 	setCanvasSize(size);
 }
 
@@ -34,6 +37,10 @@ const QColor& CanvasModel::getMainColor() const {
 
 const QColor& CanvasModel::getAltColor() const {
 	return alt_color_;
+}
+
+ShapeType CanvasModel::getNextShape() const {
+	return next_shape_;
 }
 
 void CanvasModel::setCanvasSize(QSize size) {
@@ -99,6 +106,10 @@ void CanvasModel::calculatePoisson() {
 	emit canvasUpdated(getImage(ImageType::IMG_COMPOSED).rect());
 }
 
+void CanvasModel::setNextShape(ShapeType shape) {
+	next_shape_ = shape;
+}
+
 void CanvasModel::updateCanvas(const QRect& clipping_region, bool emit_signal) {
 	//TODO Check clipping
 	QPainter strokes(&images_[(int) ImageType::IMG_STROKES]);
@@ -130,7 +141,14 @@ void CanvasModel::updateCanvas(const QRect& clipping_region, bool emit_signal) {
 }
 
 Shape CanvasModel::createShape() {
-	//TODO Use shape factory
-	return std::make_shared<Line>(main_color_);
+	switch (next_shape_) {
+		case ShapeType::LINE:
+			return std::make_shared<Line>(main_color_);
+		case ShapeType::RECT:
+			return std::make_shared<Rectangle>(main_color_);
+		default:
+			qDebug() << "Unexpected shape type";
+			return std::make_shared<Line>(main_color_);
+	}
 }
 

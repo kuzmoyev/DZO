@@ -19,9 +19,15 @@ class Enums : public QObject {
 	};
 
 	Q_ENUM(ImageType);
+
+	enum class ShapeType {
+		LINE, RECT
+	};
+
+	Q_ENUM(ShapeType)
 };
 
 using ImageType = Enums::ImageType;
-
+using ShapeType = Enums::ShapeType;
 
 #endif //GRADIENT_PAINTER_IMAGE_TYPE_H

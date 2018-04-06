@@ -16,8 +16,7 @@
 #include <QtGui/QBitmap>
 
 #include "shapes/shape.h"
-#include "shapes/line.h"
-#include "image_type.h"
+#include "enums.h"
 
 //TODO Start in a worker thread
 class CanvasModel : public QObject {
@@ -29,8 +28,9 @@ class CanvasModel : public QObject {
 	const QImage& getImage(ImageType type) const;
 	QImage& getImage(ImageType type);
 	const QSize& getCanvasSize() const;
-	const QColor& getMainColor() const ;
-	const QColor& getAltColor() const ;
+	const QColor& getMainColor() const;
+	const QColor& getAltColor() const;
+	ShapeType getNextShape() const;
 
   signals:
 	void canvasUpdated(QRect bounds);
@@ -48,6 +48,7 @@ class CanvasModel : public QObject {
 	void setMainColor(QColor);
 	void setAltColor(QColor);
 	void calculatePoisson();
+	void setNextShape(ShapeType);
 
   private:
 	void updateCanvas(const QRect& clipping_region, bool emit_signal);
@@ -59,6 +60,7 @@ class CanvasModel : public QObject {
 	QSize size_;
 	QColor main_color_;
 	QColor alt_color_;
+	ShapeType next_shape_;
 };
 
 
