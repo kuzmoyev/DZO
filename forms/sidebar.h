@@ -3,6 +3,8 @@
 
 #include <QWidget>
 #include <src/gui/ClickableLabel.h>
+#include <QtWidgets/QGroupBox>
+#include <QtWidgets/QRadioButton>
 #include "src/canvas/canvas_model.h"
 
 namespace Ui {
@@ -23,6 +25,7 @@ class Sidebar : public QWidget {
 	void clickedRedo();
 	void mainColorChanged(QColor);
 	void altColorChanged(QColor);
+	void nextShapeChanged(ShapeType);
 
   public slots:
 	void setCanvasSize(QSize);
@@ -39,8 +42,9 @@ class Sidebar : public QWidget {
   private:
 	Ui::Sidebar* ui;
 	CanvasModel& model_;
-	ClickableLabel* mainColorBtn;
-	ClickableLabel* altColorBtn;
+	ClickableLabel* main_color_btn_;
+	ClickableLabel* alt_color_btn_;
+	QGroupBox* shapes_box_;
 };
 
 #endif // SIDEBAR_H

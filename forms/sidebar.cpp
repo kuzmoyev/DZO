@@ -1,5 +1,6 @@
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QColorDialog>
+#include <QDebug>
 
 #include "sidebar.h"
 #include "ui_sidebar.h"
@@ -10,6 +11,8 @@ Sidebar::Sidebar(CanvasModel& model, QWidget* parent) :
 		model_(model) {
 	ui->setupUi(this);
 
+	//TODO Refactor this monster
+
 	ui->canvasXSizeLe->setEnabled(true);
 	ui->canvasYSizeLe->setEnabled(true);
 	setCanvasSize(model.getCanvasSize());
@@ -18,21 +21,44 @@ Sidebar::Sidebar(CanvasModel& model, QWidget* parent) :
 	connect(ui->canvasXSizeLe, &QLineEdit::returnPressed, this, &Sidebar::sizeLeChanged);
 	connect(ui->canvasYSizeLe, &QLineEdit::returnPressed, this, &Sidebar::sizeLeChanged);
 
-	mainColorBtn = new ClickableLabel();
-	altColorBtn = new ClickableLabel();
-	ui->colorBtnLayout->addWidget(mainColorBtn);
-	ui->colorBtnLayout->addWidget(altColorBtn);
-	mainColorBtn->setToolTip(tr("Set Main Color"));
-	altColorBtn->setToolTip(tr("Set Alternative Color"));
+	main_color_btn_ = new ClickableLabel();
+	alt_color_btn_ = new ClickableLabel();
+	ui->colorBtnLayout->addWidget(main_color_btn_);
+	ui->colorBtnLayout->addWidget(alt_color_btn_);
+	main_color_btn_->setToolTip(tr("Set Main Color"));
+	alt_color_btn_->setToolTip(tr("Set Alternative Color"));
 	updateColors(model.getMainColor(), model.getAltColor());
-	connect(mainColorBtn, &ClickableLabel::clicked, this, &Sidebar::mainColorClicked);
-	connect(altColorBtn, &ClickableLabel::clicked, this, &Sidebar::altColorClicked);
+	connect(main_color_btn_, &ClickableLabel::clicked, this, &Sidebar::mainColorClicked);
+	connect(alt_color_btn_, &ClickableLabel::clicked, this, &Sidebar::altColorClicked);
 	connect(this, &Sidebar::mainColorChanged, &model_, &CanvasModel::setMainColor);
 	connect(this, &Sidebar::altColorChanged, &model_, &CanvasModel::setAltColor);
 	connect(&model_, &CanvasModel::colorsUpdated, this, &Sidebar::updateColors);
 
 	ui->runBtn->setEnabled(true);
 	connect(ui->runBtn, &QPushButton::clicked, &model_, &CanvasModel::calculatePoisson);
+
+	auto line_shape_btn = new QRadioButton("Line");
+	auto rect_shape_btn = new QRadioButton("Rectangle");
+	connect(line_shape_btn, &QRadioButton::pressed, [&] { emit nextShapeChanged(ShapeType::LINE); });
+	connect(rect_shape_btn, &QRadioButton::pressed, [&] { emit nextShapeChanged(ShapeType::RECT); });
+	connect(this, &Sidebar::nextShapeChanged, &model_, &CanvasModel::setNextShape);
+	auto shape_box_lo = new QVBoxLayout();
+	shape_box_lo->addWidget(line_shape_btn);
+	shape_box_lo->addWidget(rect_shape_btn);
+	auto shape_box = new QGroupBox("Brush mode");
+	shape_box->setLayout(shape_box_lo);
+	switch (model_.getNextShape()) {
+		case ShapeType::LINE:
+			line_shape_btn->toggle();
+			break;
+		case ShapeType::RECT:
+			rect_shape_btn->toggle();
+			break;
+		default:
+			qDebug() << "Shape type is not handled";
+	}
+
+	ui->verticalLayout->insertWidget(ui->verticalLayout->count() - 2, shape_box);
 }
 
 Sidebar::~Sidebar() {
@@ -57,8 +83,8 @@ void Sidebar::setRunState(bool on) {
 }
 
 void Sidebar::updateColors(QColor main, QColor alt) {
-	mainColorBtn->setStyleSheet("QLabel {background-color:" + main.name() + "}");
-	altColorBtn->setStyleSheet("QLabel {background-color:" + alt.name() + "}");
+	main_color_btn_->setStyleSheet("QLabel {background-color:" + main.name() + "}");
+	alt_color_btn_->setStyleSheet("QLabel {background-color:" + alt.name() + "}");
 }
 
 
@@ -104,3 +130,4 @@ void Sidebar::altColorClicked() {
 		return;
 	emit altColorChanged(color);
 }
+
