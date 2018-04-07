@@ -1,4 +1,4 @@
-#include "ClickableLabel.h"
+#include "clickable_label.h"
 
 
 void ClickableLabel::mousePressEvent(QMouseEvent* event) {

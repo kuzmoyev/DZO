@@ -7,9 +7,9 @@ class Line : public ShapeBase {
 	explicit Line(const QColor& color);
 
   protected:
-	void doOnMouseDown(QPoint pos) override;
-	void doOnMouseMove(QPoint pos) override;
-	void doOnMouseUp(QPoint pos) override;
+	void doOnMouseDown(const QPoint& pos) override;
+	void doOnMouseMove(const QPoint& pos) override;
+	void doOnMouseUp(const QPoint& pos) override;
 	bool doInitialized() const override;
 
   protected:

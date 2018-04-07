@@ -11,11 +11,11 @@ constexpr int STROKE_WIDTH = 5;
 
 class ShapeBase {
   public:
-	ShapeBase(const QColor& main_color);
+	explicit ShapeBase(const QColor& main_color);
 
-	QRect onMouseDown(QPoint pos);
-	QRect onMouseMove(QPoint pos);
-	QRect onMouseUp(QPoint pos);
+	QRect onMouseDown(const QPoint& pos);
+	QRect onMouseMove(const QPoint& pos);
+	QRect onMouseUp(const QPoint& pos);
 
 	virtual bool initialized() const;
 
@@ -23,9 +23,9 @@ class ShapeBase {
 	void paint(QPainter& painter, ImageType role) const;
 
   protected:
-	virtual void doOnMouseDown(QPoint pos) = 0;
-	virtual void doOnMouseMove(QPoint pos) = 0;
-	virtual void doOnMouseUp(QPoint pos) = 0;
+	virtual void doOnMouseDown(const QPoint& pos) = 0;
+	virtual void doOnMouseMove(const QPoint& pos) = 0;
+	virtual void doOnMouseUp(const QPoint& pos) = 0;
 
 	virtual bool doInitialized() const = 0;
 

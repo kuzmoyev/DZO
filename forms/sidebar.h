@@ -2,7 +2,7 @@
 #define SIDEBAR_H
 
 #include <QWidget>
-#include <src/gui/ClickableLabel.h>
+#include <src/gui/clickable_label.h>
 #include <QtWidgets/QGroupBox>
 #include <QtWidgets/QRadioButton>
 #include "src/canvas/canvas_model.h"
