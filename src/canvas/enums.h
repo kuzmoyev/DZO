@@ -21,7 +21,7 @@ class Enums : public QObject {
 	Q_ENUM(ImageType);
 
 	enum class ShapeType {
-		LINE, RECT
+		LINE, RECT, SCRIBBLE
 	};
 
 	Q_ENUM(ShapeType)

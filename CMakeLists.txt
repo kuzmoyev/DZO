@@ -29,6 +29,7 @@ add_executable(gradient_gui
 
         src/shapes/line.cpp
         src/shapes/rectangle.cpp
+        src/shapes/scribble.cpp
         src/shapes/shape.cpp
 
         src/canvas/enums.h

@@ -58,6 +58,7 @@ void CanvasView::mouseMoveEvent(QMouseEvent* event) {
 }
 
 void CanvasView::paintEvent(QPaintEvent* event) {
+	Q_UNUSED(event);
 	//TODO check painting is clipped
 	QPainter p(this);
 	p.drawImage(QPoint(0, 0), model_.getImage(role_));

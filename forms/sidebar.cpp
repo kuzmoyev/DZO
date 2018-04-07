@@ -125,6 +125,9 @@ void Sidebar::initShapeSelector() {
 	auto rect_shape_btn = new QRadioButton("Rectangle");
 	shape_box_lo->addWidget(rect_shape_btn);
 
+	auto scribble_shape_btn = new QRadioButton("Scribble");
+	shape_box_lo->addWidget(scribble_shape_btn);
+
 	auto shape_box = new QGroupBox("Brush mode");
 	shape_box->setLayout(shape_box_lo);
 
@@ -135,6 +138,9 @@ void Sidebar::initShapeSelector() {
 		case ShapeType::RECT:
 			rect_shape_btn->toggle();
 			break;
+		case ShapeType::SCRIBBLE:
+			scribble_shape_btn->toggle();
+			break;
 		default:
 			qDebug() << "Shape type is not handled";
 	}
@@ -143,6 +149,7 @@ void Sidebar::initShapeSelector() {
 
 	connect(line_shape_btn, &QRadioButton::pressed, [&] { emit nextShapeChanged(ShapeType::LINE); });
 	connect(rect_shape_btn, &QRadioButton::pressed, [&] { emit nextShapeChanged(ShapeType::RECT); });
+	connect(scribble_shape_btn, &QRadioButton::pressed, [&] { emit nextShapeChanged(ShapeType::SCRIBBLE); });
 	connect(this, &Sidebar::nextShapeChanged, &model_, &CanvasModel::setNextShape);
 }
 

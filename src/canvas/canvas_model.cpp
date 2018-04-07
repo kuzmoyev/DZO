@@ -12,6 +12,7 @@
 #include "canvas_model.h"
 #include "shapes/line.h"
 #include "shapes/rectangle.h"
+#include "shapes/scribble.h"
 
 CanvasModel::CanvasModel(QSize size, const QColor& main, const QColor& alt) :
 		images_(QMetaEnum::fromType<ImageType>().keyCount()),
@@ -146,6 +147,8 @@ Shape CanvasModel::createShape() {
 			return std::make_shared<Line>(main_color_);
 		case ShapeType::RECT:
 			return std::make_shared<Rectangle>(main_color_);
+		case ShapeType::SCRIBBLE:
+			return std::make_shared<Scribble>(main_color_);
 		default:
 			qDebug() << "Unexpected shape type";
 			return std::make_shared<Line>(main_color_);
