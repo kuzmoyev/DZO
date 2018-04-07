@@ -16,7 +16,10 @@
 
 CanvasModel::CanvasModel(QSize size, const QColor& main, const QColor& alt) :
 		images_(QMetaEnum::fromType<ImageType>().keyCount()),
-		main_color_(main), alt_color_(alt), next_shape_(ShapeType::LINE) {
+		main_color_(main), alt_color_(alt),
+		next_shape_(ShapeType::LINE),
+		poisson_mode_(PoissonBlendingMode::OVERRIDE),
+		merging_mode_(BackgroundMergingMode::PRESERVE) {
 	setCanvasSize(size);
 }
 
@@ -42,6 +45,14 @@ const QColor& CanvasModel::getAltColor() const {
 
 ShapeType CanvasModel::getNextShape() const {
 	return next_shape_;
+}
+
+PoissonBlendingMode CanvasModel::getPoissonMode() const {
+	return poisson_mode_;
+}
+
+BackgroundMergingMode CanvasModel::getMergingMode() const {
+	return merging_mode_;
 }
 
 void CanvasModel::setCanvasSize(QSize size) {
@@ -99,16 +110,32 @@ void CanvasModel::setAltColor(QColor color) {
 }
 
 void CanvasModel::calculatePoisson() {
+	if (poisson_mode_ != PoissonBlendingMode::OVERRIDE) {
+		qDebug() << "Only OVERRIDE poisson mode is supported";
+	}
 	//TODO Run in separate thread
 	getImage(ImageType::IMG_COMPOSED) = simple_solver::poisson(
 			getImage(ImageType::IMG_BG),
 			getImage(ImageType::IMG_COMPOSED),
 			getImage(ImageType::IMG_MASK));
+	if (merging_mode_ == BackgroundMergingMode::REPLACE) {
+		qDebug() << "Only PRESERVE merging mode is supported";
+		/*getImage(ImageType::IMG_BG) = getImage(ImageType::IMG_COMPOSED);
+		shapes_.clear();*/
+	}
 	emit canvasUpdated(getImage(ImageType::IMG_COMPOSED).rect());
 }
 
 void CanvasModel::setNextShape(ShapeType shape) {
 	next_shape_ = shape;
+}
+
+void CanvasModel::setPoissonMode(PoissonBlendingMode mode) {
+	poisson_mode_ = mode;
+}
+
+void CanvasModel::setMergingMode(BackgroundMergingMode mode) {
+	merging_mode_ = mode;
 }
 
 void CanvasModel::updateCanvas(const QRect& clipping_region, bool emit_signal) {

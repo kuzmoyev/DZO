@@ -31,6 +31,8 @@ class CanvasModel : public QObject {
 	const QColor& getMainColor() const;
 	const QColor& getAltColor() const;
 	ShapeType getNextShape() const;
+	PoissonBlendingMode getPoissonMode() const;
+	BackgroundMergingMode getMergingMode() const;
 
   signals:
 	void canvasUpdated(QRect bounds);
@@ -49,6 +51,9 @@ class CanvasModel : public QObject {
 	void setAltColor(QColor);
 	void calculatePoisson();
 	void setNextShape(ShapeType);
+	void setPoissonMode(PoissonBlendingMode);
+	void setMergingMode(BackgroundMergingMode);
+
 
   private:
 	void updateCanvas(const QRect& clipping_region, bool emit_signal);
@@ -61,6 +66,8 @@ class CanvasModel : public QObject {
 	QColor main_color_;
 	QColor alt_color_;
 	ShapeType next_shape_;
+	PoissonBlendingMode poisson_mode_;
+	BackgroundMergingMode merging_mode_;
 };
 
 

@@ -14,6 +14,8 @@ Sidebar::Sidebar(CanvasModel& model, QWidget* parent) :
 	initCanvasSizeLe();
 	initColorButtons();
 	initShapeSelector();
+	initPoissonModeSelector();
+	initMergingModeSelector();
 
 	connect(ui->run_btn_, &QPushButton::clicked, &model_, &CanvasModel::calculatePoisson);
 }
@@ -117,19 +119,19 @@ void Sidebar::initColorButtons() {
 }
 
 void Sidebar::initShapeSelector() {
-	auto shape_box_lo = new QVBoxLayout();
+	auto layout = new QVBoxLayout();
 
 	auto line_shape_btn = new QRadioButton("Line");
-	shape_box_lo->addWidget(line_shape_btn);
+	layout->addWidget(line_shape_btn);
 
 	auto rect_shape_btn = new QRadioButton("Rectangle");
-	shape_box_lo->addWidget(rect_shape_btn);
+	layout->addWidget(rect_shape_btn);
 
 	auto scribble_shape_btn = new QRadioButton("Scribble");
-	shape_box_lo->addWidget(scribble_shape_btn);
+	layout->addWidget(scribble_shape_btn);
 
-	auto shape_box = new QGroupBox("Brush mode");
-	shape_box->setLayout(shape_box_lo);
+	auto group_box = new QGroupBox("Brush mode");
+	group_box->setLayout(layout);
 
 	switch (model_.getNextShape()) {
 		case ShapeType::LINE:
@@ -141,15 +143,77 @@ void Sidebar::initShapeSelector() {
 		case ShapeType::SCRIBBLE:
 			scribble_shape_btn->toggle();
 			break;
-		default:
-			qDebug() << "Shape type is not handled";
 	}
 
-	ui->layout_->insertWidget(ui->layout_->count() - 2, shape_box);
+	ui->layout_->insertWidget(ui->layout_->count() - 2, group_box);
 
 	connect(line_shape_btn, &QRadioButton::pressed, [&] { emit nextShapeChanged(ShapeType::LINE); });
 	connect(rect_shape_btn, &QRadioButton::pressed, [&] { emit nextShapeChanged(ShapeType::RECT); });
 	connect(scribble_shape_btn, &QRadioButton::pressed, [&] { emit nextShapeChanged(ShapeType::SCRIBBLE); });
 	connect(this, &Sidebar::nextShapeChanged, &model_, &CanvasModel::setNextShape);
 }
+
+void Sidebar::initPoissonModeSelector() {
+	auto layout = new QVBoxLayout();
+
+	auto override_btn = new QRadioButton("Override");
+	layout->addWidget(override_btn);
+
+	auto blend_btn = new QRadioButton("Blend");
+	layout->addWidget(blend_btn);
+
+	auto group_box = new QGroupBox("Poisson mode");
+	group_box->setLayout(layout);
+
+	switch (model_.getPoissonMode()) {
+		case PoissonBlendingMode::OVERRIDE:
+			override_btn->toggle();
+			break;
+		case PoissonBlendingMode::BLEND:
+			blend_btn->toggle();
+			break;
+	}
+
+	ui->layout_->insertWidget(ui->layout_->count() - 2, group_box);
+
+	connect(override_btn, &QRadioButton::pressed,
+			[&] { emit poissonModeChanged(PoissonBlendingMode::OVERRIDE); });
+	connect(blend_btn, &QRadioButton::pressed,
+			[&] { emit poissonModeChanged(PoissonBlendingMode::BLEND); });
+
+	connect(this, &Sidebar::poissonModeChanged, &model_, &CanvasModel::setPoissonMode);
+}
+
+void Sidebar::initMergingModeSelector() {
+	auto layout = new QVBoxLayout();
+
+	auto preserve_btn = new QRadioButton("Preserve");
+	layout->addWidget(preserve_btn);
+
+	auto replace_btn = new QRadioButton("Replace");
+	layout->addWidget(replace_btn);
+
+	auto group_box = new QGroupBox("Background merging mode");
+	group_box->setLayout(layout);
+
+	switch (model_.getMergingMode()) {
+		case BackgroundMergingMode::PRESERVE:
+			preserve_btn->toggle();
+			break;
+		case BackgroundMergingMode::REPLACE:
+			replace_btn->toggle();
+			break;
+	}
+
+	ui->layout_->insertWidget(ui->layout_->count() - 2, group_box);
+
+	connect(preserve_btn, &QRadioButton::pressed,
+			[&] { emit mergingModeChanged(BackgroundMergingMode::PRESERVE); });
+	connect(replace_btn, &QRadioButton::pressed,
+			[&] { emit mergingModeChanged(BackgroundMergingMode::REPLACE); });
+
+	connect(this, &Sidebar::mergingModeChanged, &model_, &CanvasModel::setMergingMode);
+}
+
+
 

@@ -26,6 +26,8 @@ class Sidebar : public QWidget {
 	void mainColorChanged(QColor);
 	void altColorChanged(QColor);
 	void nextShapeChanged(ShapeType);
+	void poissonModeChanged(PoissonBlendingMode);
+	void mergingModeChanged(BackgroundMergingMode);
 
   public slots:
 	void setCanvasSize(QSize);
@@ -43,6 +45,8 @@ class Sidebar : public QWidget {
 	void initCanvasSizeLe();
 	void initColorButtons();
 	void initShapeSelector();
+	void initPoissonModeSelector();
+	void initMergingModeSelector();
 
 	Ui::Sidebar* ui;
 	CanvasModel& model_;
