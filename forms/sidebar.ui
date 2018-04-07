@@ -30,14 +30,14 @@
     <enum>QLayout::SetMinimumSize</enum>
    </property>
    <item>
-    <layout class="QVBoxLayout" name="verticalLayout">
+    <layout class="QVBoxLayout" name="layout_">
      <property name="sizeConstraint">
       <enum>QLayout::SetDefaultConstraint</enum>
      </property>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout">
+      <layout class="QHBoxLayout" name="_horizontalLayout">
        <item>
-        <widget class="QPushButton" name="undoBtn">
+        <widget class="QPushButton" name="undo_btn_">
          <property name="enabled">
           <bool>false</bool>
          </property>
@@ -59,7 +59,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="redoBtn">
+        <widget class="QPushButton" name="redo_btn_">
          <property name="enabled">
           <bool>false</bool>
          </property>
@@ -71,11 +71,11 @@
       </layout>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <layout class="QHBoxLayout" name="_horizontalLayout_2">
        <item>
-        <widget class="QLineEdit" name="canvasXSizeLe">
+        <widget class="QLineEdit" name="canvas_size_x_le_">
          <property name="enabled">
-          <bool>false</bool>
+          <bool>true</bool>
          </property>
          <property name="cursorMoveStyle">
           <enum>Qt::LogicalMoveStyle</enum>
@@ -83,26 +83,26 @@
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="label">
+        <widget class="QLabel" name="_label">
          <property name="text">
           <string>x</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="canvasYSizeLe">
+        <widget class="QLineEdit" name="canvas_size_y_le_">
          <property name="enabled">
-          <bool>false</bool>
+          <bool>true</bool>
          </property>
         </widget>
        </item>
       </layout>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="colorBtnLayout"/>
+      <layout class="QHBoxLayout" name="color_btn_lo_"/>
      </item>
      <item>
-      <widget class="QCheckBox" name="invertColorCBox">
+      <widget class="QCheckBox" name="invert_color_cbox_">
        <property name="enabled">
         <bool>false</bool>
        </property>
@@ -112,9 +112,9 @@
       </widget>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <layout class="QHBoxLayout" name="_horizontalLayout_3">
        <item>
-        <widget class="QPushButton" name="saveCanvasBtn">
+        <widget class="QPushButton" name="save_canvas_btn_">
          <property name="enabled">
           <bool>false</bool>
          </property>
@@ -124,7 +124,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="loadCanvasBtn">
+        <widget class="QPushButton" name="load_canvas_btn_">
          <property name="enabled">
           <bool>false</bool>
          </property>
@@ -136,9 +136,9 @@
       </layout>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_4">
+      <layout class="QHBoxLayout" name="_horizontalLayout_4">
        <item>
-        <widget class="QPushButton" name="saveMaskBtn">
+        <widget class="QPushButton" name="save_mask_btn_">
          <property name="enabled">
           <bool>false</bool>
          </property>
@@ -148,7 +148,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="loadMaskBtn">
+        <widget class="QPushButton" name="load_mask_btn_">
          <property name="enabled">
           <bool>false</bool>
          </property>
@@ -160,7 +160,7 @@
       </layout>
      </item>
      <item>
-      <spacer name="verticalSpacer">
+      <spacer name="_verticalSpacer">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
        </property>
@@ -173,9 +173,9 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="runBtn">
+      <widget class="QPushButton" name="run_btn_">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="text">
         <string>Run</string>

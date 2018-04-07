@@ -40,6 +40,10 @@ class Sidebar : public QWidget {
 	void altColorClicked();
 
   private:
+	void initCanvasSizeLe();
+	void initColorButtons();
+	void initShapeSelector();
+
 	Ui::Sidebar* ui;
 	CanvasModel& model_;
 	ClickableLabel* main_color_btn_;
