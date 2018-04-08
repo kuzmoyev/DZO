@@ -12,18 +12,34 @@
 
 #include "simple_poisson_solver/poisson.h"
 
-using namespace std;
 
 namespace simple_solver {
-
     QRgb WHITE = 0xffffffff;
 
-    void calcMaskPixels(const QImage& img, vector<pair<int, int>>& pixels,
-                        map<pair<int, int>, int>& pixelsColumn) {
+    typedef amgcl::backend::builtin<double> Backend;
+    typedef amgcl::make_solver<
+            // Use AMG as preconditioner:
+            amgcl::amg<
+                    Backend,
+                    amgcl::coarsening::smoothed_aggregation,
+                    amgcl::relaxation::spai0
+            >,
+            // And BiCGStab as iterative solver:
+            amgcl::solver::bicgstab<Backend>
+    > PoissonSolver;
+
+    template <typename T>
+    T clip(T x, T min, T max) {
+    	return std::max(std::min(x, max), min);
+    }
+
+    void calcMaskPixels(const QImage& img,
+						std::vector<std::pair<int, int>>& pixels,
+						std::map<std::pair<int, int>, int>& pixelsColumn) {
         for (int x = 0; x < img.width(); x++) {
             for (int y = 0; y < img.height(); y++) {
                 if (img.pixel(x, y) == WHITE) {
-                    pixelsColumn[make_pair(x, y)] = int(pixels.size());
+                    pixelsColumn[std::make_pair(x, y)] = int(pixels.size());
                     pixels.emplace_back(x, y);
                 }
             }
@@ -91,11 +107,10 @@ namespace simple_solver {
             std::vector<int>& rhsR,
             std::vector<int>& rhsG,
             std::vector<int>& rhsB,
-            vector<pair<int, int>>& pixels
+			std::vector<std::pair<int, int>>& pixels
     ) {
-        map<pair<int, int>, int> pixelsColumn;
+		std::map<std::pair<int, int>, int> pixelsColumn;
         calcMaskPixels(mask, pixels, pixelsColumn);
-
 
         ulong n = pixels.size();
 
@@ -137,7 +152,7 @@ namespace simple_solver {
                 int rhsValB = -4 * scolor.blue();
 
 
-                constexpr pair<int, int> neighbours[]{
+                constexpr std::pair<int, int> neighbours[]{
                         {-1, 0},
                         {1,  0},
                         {0,  1},
@@ -145,7 +160,7 @@ namespace simple_solver {
                 };
                 int dx, dy;
                 for (auto d : neighbours) {
-                    tie(dx, dy) = d;
+					std::tie(dx, dy) = d;
                     int nx = x + dx;
                     int ny = y + dy;
 
@@ -163,7 +178,7 @@ namespace simple_solver {
                         rhsValB -= tcolor.blue();
                     } else {
                         // adding value to sparse matrix
-                        col.push_back(pixelsColumn[make_pair(nx, ny)]);
+                        col.push_back(pixelsColumn[std::make_pair(nx, ny)]);
                         valR.push_back(1);
                         valG.push_back(1);
                         valB.push_back(1);
@@ -188,37 +203,23 @@ namespace simple_solver {
         return n;
     }
 
-    typedef amgcl::backend::builtin<double> Backend;
-    typedef amgcl::make_solver<
-            // Use AMG as preconditioner:
-            amgcl::amg<
-                    Backend,
-                    amgcl::coarsening::smoothed_aggregation,
-                    amgcl::relaxation::spai0
-            >,
-            // And BiCGStab as iterative solver:
-            amgcl::solver::bicgstab<Backend>
-    > PoissonSolver;
-
-
     QImage poisson(const QImage& target, const QImage& source, const QImage& mask) {
+		std::vector<int> ptr;
+		std::vector<int> col;
 
-        vector<int> ptr;
-        vector<int> col;
+		std::vector<int> valR;
+		std::vector<int> valG;
+		std::vector<int> valB;
 
-        vector<int> valR;
-        vector<int> valG;
-        vector<int> valB;
+		std::vector<int> rhsR;
+		std::vector<int> rhsG;
+		std::vector<int> rhsB;
 
-        vector<int> rhsR;
-        vector<int> rhsG;
-        vector<int> rhsB;
-
-        vector<pair<int, int>> pixels;
+		std::vector<std::pair<int, int>> pixels;
 
         ulong n = poisson(target, source, mask, ptr, col, valR, valG, valB, rhsR, rhsG, rhsB, pixels);
 
-        qDebug() << "built matrix";
+        qDebug() << "Built matrix";
 
         PoissonSolver::params prm;
         prm.solver.maxiter = 2;
@@ -227,29 +228,29 @@ namespace simple_solver {
         PoissonSolver solveG(boost::tie(n, ptr, col, valG), prm);
         PoissonSolver solveB(boost::tie(n, ptr, col, valB), prm);
 
-        vector<double> R(n, 0);
-        vector<double> G(n, 0);
-        vector<double> B(n, 0);
+        std::vector<double> R(n, 0);
+		std::vector<double> G(n, 0);
+		std::vector<double> B(n, 0);
 
 		int iters;
 		double error;
 
         boost::tie(iters, error) = solveR(rhsR, R);
-        cout << "R: error-" << error << ", iters-" << iters << endl;
+        qDebug() << "R: error-" << error << ", iters-" << iters;
 
         boost::tie(iters, error) = solveG(rhsG, G);
-        cout << "G: error-" << error << ", iters-" << iters << endl;
+        qDebug() << "G: error-" << error << ", iters-" << iters;
 
         boost::tie(iters, error) = solveB(rhsB, B);
-        cout << "B: error-" << error << ", iters-" << iters << endl;
+        qDebug() << "B: error-" << error << ", iters-" << iters;
 
 
         QImage result = target.copy();
 
         for (uint i = 0; i < pixels.size(); i++) {
-            int r = max(min(int(R[i]), 255), 0);
-            int g = max(min(int(G[i]), 255), 0);
-            int b = max(min(int(B[i]), 255), 0);
+            int r = clip(int(R[i]), 255, 0);
+            int g = clip(int(G[i]), 255, 0);
+            int b = clip(int(B[i]), 255, 0);
 
             QColor c(r, g, b);
             int x = pixels[i].first;
