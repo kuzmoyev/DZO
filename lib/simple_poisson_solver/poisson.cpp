@@ -247,10 +247,10 @@ namespace simple_solver {
 
         QImage result = target.copy();
 
-        for (uint i = 0; i < pixels.size(); i++) {
-            int r = clip(int(R[i]), 255, 0);
-            int g = clip(int(G[i]), 255, 0);
-            int b = clip(int(B[i]), 255, 0);
+        for (size_t i = 0; i < pixels.size(); i++) {
+            int r = clip(int(result_r[i]), 0, 255);
+            int g = clip(int(result_g[i]), 0, 255);
+            int b = clip(int(result_b[i]), 0, 255);
 
             QColor c(r, g, b);
             int x = pixels[i].first;
