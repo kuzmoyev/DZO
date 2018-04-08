@@ -223,9 +223,9 @@ namespace simple_solver {
         PoissonSolver::params prm;
         prm.solver.maxiter = 2;
 
-        PoissonSolver solveR(tie(n, ptr, col, valR), prm);
-        PoissonSolver solveG(tie(n, ptr, col, valG), prm);
-        PoissonSolver solveB(tie(n, ptr, col, valB), prm);
+        PoissonSolver solveR(boost::tie(n, ptr, col, valR), prm);
+        PoissonSolver solveG(boost::tie(n, ptr, col, valG), prm);
+        PoissonSolver solveB(boost::tie(n, ptr, col, valB), prm);
 
         vector<double> R(n, 0);
         vector<double> G(n, 0);
@@ -234,13 +234,13 @@ namespace simple_solver {
 		int iters;
 		double error;
 
-        tie(iters, error) = solveR(rhsR, R);
+        boost::tie(iters, error) = solveR(rhsR, R);
         cout << "R: error-" << error << ", iters-" << iters << endl;
 
-        tie(iters, error) = solveG(rhsG, G);
+        boost::tie(iters, error) = solveG(rhsG, G);
         cout << "G: error-" << error << ", iters-" << iters << endl;
 
-        tie(iters, error) = solveB(rhsB, B);
+        boost::tie(iters, error) = solveB(rhsB, B);
         cout << "B: error-" << error << ", iters-" << iters << endl;
 
 
