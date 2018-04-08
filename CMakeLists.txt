@@ -21,15 +21,24 @@ target_link_libraries(simple_poisson_solver Qt5::Core amgcl)
 target_include_directories(simple_poisson_solver PRIVATE include/simple_poisson_solver)
 
 add_executable(gradient_gui
-        src/main.cpp
-        src/shapes/shape.cpp
-        src/shapes/line.cpp
         forms/mainwindow.cpp
         forms/sidebar.cpp
-        src/canvas/image_type.h
+
+        src/main.cpp
+        src/utility.cpp
+
+        src/shapes/line.cpp
+        src/shapes/rectangle.cpp
+        src/shapes/scribble.cpp
+        src/shapes/shape.cpp
+
+        src/canvas/enums.h
         src/canvas/canvas_model.cpp
         src/canvas/canvas_view.cpp
-        src/canvas/multi_canvas_view.cpp)
+        src/canvas/multi_canvas_view.cpp
+
+        src/gui/clickable_label.cpp
+        )
 
 target_link_libraries(gradient_gui Qt5::Widgets simple_poisson_solver amgcl)
 target_include_directories(gradient_gui PRIVATE src)

@@ -7,19 +7,31 @@
 #include <QtCore/QMetaEnum>
 #include <QDebug>
 
+#include "simple_poisson_solver/poisson.h"
+
 #include "canvas_model.h"
+#include "shapes/line.h"
+#include "shapes/rectangle.h"
+#include "shapes/scribble.h"
 
 CanvasModel::CanvasModel(QSize size, const QColor& main, const QColor& alt) :
 		images_(QMetaEnum::fromType<ImageType>().keyCount()),
-		main_color_(main), alt_color_(alt) {
+		main_color_(main), alt_color_(alt),
+		next_shape_(ShapeType::LINE),
+		poisson_mode_(PoissonBlendingMode::OVERRIDE),
+		merging_mode_(BackgroundMergingMode::PRESERVE) {
 	setCanvasSize(size);
 }
 
-QImage CanvasModel::getImage(ImageType type) {
+const QImage& CanvasModel::getImage(ImageType type) const {
 	return images_[(int) type];
 }
 
-QSize CanvasModel::getCanvasSize() const {
+QImage& CanvasModel::getImage(ImageType type) {
+	return images_[(int) type];
+}
+
+const QSize& CanvasModel::getCanvasSize() const {
 	return size_;
 }
 
@@ -29,6 +41,18 @@ const QColor& CanvasModel::getMainColor() const {
 
 const QColor& CanvasModel::getAltColor() const {
 	return alt_color_;
+}
+
+ShapeType CanvasModel::getNextShape() const {
+	return next_shape_;
+}
+
+PoissonBlendingMode CanvasModel::getPoissonMode() const {
+	return poisson_mode_;
+}
+
+BackgroundMergingMode CanvasModel::getMergingMode() const {
+	return merging_mode_;
 }
 
 void CanvasModel::setCanvasSize(QSize size) {
@@ -85,6 +109,35 @@ void CanvasModel::setAltColor(QColor color) {
 	}
 }
 
+void CanvasModel::calculatePoisson() {
+	if (poisson_mode_ != PoissonBlendingMode::OVERRIDE) {
+		qDebug() << "Only OVERRIDE poisson mode is supported";
+	}
+	//TODO Run in separate thread
+	getImage(ImageType::IMG_COMPOSED) = simple_solver::poisson(
+			getImage(ImageType::IMG_BG),
+			getImage(ImageType::IMG_COMPOSED),
+			getImage(ImageType::IMG_MASK));
+	if (merging_mode_ == BackgroundMergingMode::REPLACE) {
+		qDebug() << "Only PRESERVE merging mode is supported";
+		/*getImage(ImageType::IMG_BG) = getImage(ImageType::IMG_COMPOSED);
+		shapes_.clear();*/
+	}
+	emit canvasUpdated(getImage(ImageType::IMG_COMPOSED).rect());
+}
+
+void CanvasModel::setNextShape(ShapeType shape) {
+	next_shape_ = shape;
+}
+
+void CanvasModel::setPoissonMode(PoissonBlendingMode mode) {
+	poisson_mode_ = mode;
+}
+
+void CanvasModel::setMergingMode(BackgroundMergingMode mode) {
+	merging_mode_ = mode;
+}
+
 void CanvasModel::updateCanvas(const QRect& clipping_region, bool emit_signal) {
 	//TODO Check clipping
 	QPainter strokes(&images_[(int) ImageType::IMG_STROKES]);
@@ -92,7 +145,6 @@ void CanvasModel::updateCanvas(const QRect& clipping_region, bool emit_signal) {
 	QPainter bg(&images_[(int) ImageType::IMG_BG]);
 
 	strokes.setRenderHint(QPainter::Antialiasing);
-	mask.setRenderHint(QPainter::Antialiasing);
 	bg.setRenderHint(QPainter::Antialiasing);
 
 	strokes.setClipRect(clipping_region);
@@ -117,7 +169,16 @@ void CanvasModel::updateCanvas(const QRect& clipping_region, bool emit_signal) {
 }
 
 Shape CanvasModel::createShape() {
-	//TODO Use shape factory
-	return std::make_shared<Line>(main_color_);
+	switch (next_shape_) {
+		case ShapeType::LINE:
+			return std::make_shared<Line>(main_color_);
+		case ShapeType::RECT:
+			return std::make_shared<Rectangle>(main_color_);
+		case ShapeType::SCRIBBLE:
+			return std::make_shared<Scribble>(main_color_);
+		default:
+			qDebug() << "Unexpected shape type";
+			return std::make_shared<Line>(main_color_);
+	}
 }
 

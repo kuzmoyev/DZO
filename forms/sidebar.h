@@ -2,6 +2,9 @@
 #define SIDEBAR_H
 
 #include <QWidget>
+#include <src/gui/clickable_label.h>
+#include <QtWidgets/QGroupBox>
+#include <QtWidgets/QRadioButton>
 #include "src/canvas/canvas_model.h"
 
 namespace Ui {
@@ -20,9 +23,11 @@ class Sidebar : public QWidget {
 	void updatedCanvasSize(QSize);
 	void clickedUndo();
 	void clickedRedo();
-	void clickedRun();
 	void mainColorChanged(QColor);
 	void altColorChanged(QColor);
+	void nextShapeChanged(ShapeType);
+	void poissonModeChanged(PoissonBlendingMode);
+	void mergingModeChanged(BackgroundMergingMode);
 
   public slots:
 	void setCanvasSize(QSize);
@@ -37,8 +42,17 @@ class Sidebar : public QWidget {
 	void altColorClicked();
 
   private:
+	void initCanvasSizeLe();
+	void initColorButtons();
+	void initShapeSelector();
+	void initPoissonModeSelector();
+	void initMergingModeSelector();
+
 	Ui::Sidebar* ui;
 	CanvasModel& model_;
+	ClickableLabel* main_color_btn_;
+	ClickableLabel* alt_color_btn_;
+	QGroupBox* shapes_box_;
 };
 
 #endif // SIDEBAR_H

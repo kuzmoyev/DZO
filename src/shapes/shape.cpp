@@ -1,27 +1,21 @@
-/** @file shape.cpp
- *  @brief
- *
- *  @author Viacheslav Kroilov (metopa) <slavakroilov@gmail.com>
- */
-
 #include "shape.h"
 
 #include <QDebug>
 
 ShapeBase::ShapeBase(const QColor& main_color) : main_color_(main_color) {}
 
-QRect ShapeBase::onMouseDown(QPoint pos) {
+QRect ShapeBase::onMouseDown(const QPoint& pos) {
 	doOnMouseDown(pos);
 	return rect();
 }
 
-QRect ShapeBase::onMouseMove(QPoint pos) {
+QRect ShapeBase::onMouseMove(const QPoint& pos) {
 	auto old_rect = rect();
 	doOnMouseMove(pos);
 	return rect() | old_rect;
 }
 
-QRect ShapeBase::onMouseUp(QPoint pos) {
+QRect ShapeBase::onMouseUp(const QPoint& pos) {
 	auto old_rect = rect();
 	doOnMouseUp(pos);
 	return rect() | old_rect;
@@ -32,10 +26,29 @@ bool ShapeBase::initialized() const {
 }
 
 QRect ShapeBase::rect() const {
-	auto r = doRect().marginsAdded(QMargins(2, 2, 2, 2));
-	return r;
+	return doRect() + QMargins(STROKE_WIDTH, STROKE_WIDTH, STROKE_WIDTH, STROKE_WIDTH);
 }
 
 void ShapeBase::paint(QPainter& painter, ImageType role) const {
-	doPaint(painter, role);
+	QPen pen;
+	switch (role) {
+		case ImageType::IMG_BG:
+			pen.setColor(main_color_);
+			pen.setWidth(STROKE_WIDTH);
+			break;
+
+		case ImageType::IMG_COMPOSED:
+			return;
+
+		case ImageType::IMG_STROKES:
+			pen.setColor(Qt::darkGray);
+			pen.setWidth(STROKE_WIDTH);
+			break;
+		case ImageType::IMG_MASK:
+			pen.setColor(Qt::black);
+			break;
+	}
+
+	painter.setPen(pen);
+	doPaint(painter, pen, role);
 }
