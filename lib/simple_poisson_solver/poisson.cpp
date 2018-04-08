@@ -1,3 +1,4 @@
+#include <chrono>
 #include <tuple>
 #include <utility>
 
@@ -95,15 +96,13 @@ namespace simple_solver {
 
     // Assembles matrix for Poisson's equation with boundary condition on the masks boundary.
     // The matrix is returned in the CRS components ptr, col, and val.
-    ulong poisson(
+    ulong generateMatrix(
             const QImage& target,
             const QImage& source,
             const QImage& mask,
             std::vector<int>& ptr,
             std::vector<int>& col,
-            std::vector<int>& valR,
-            std::vector<int>& valG,
-            std::vector<int>& valB,
+            std::vector<int>& matrix_values,
             std::vector<int>& rhsR,
             std::vector<int>& rhsG,
             std::vector<int>& rhsB,
@@ -112,16 +111,13 @@ namespace simple_solver {
 		std::map<std::pair<int, int>, int> pixelsColumn;
         calcMaskPixels(mask, pixels, pixelsColumn);
 
-        ulong n = pixels.size();
+        size_t n = pixels.size();
 
         ptr.reserve(n + 1);
         ptr.push_back(0);
 
         col.reserve(n * 5);
-
-        valR.reserve(n * 5);
-        valG.reserve(n * 5);
-        valB.reserve(n * 5);
+        matrix_values.reserve(n * 5);
 
         rhsR.resize(n);
         rhsG.resize(n);
@@ -135,9 +131,7 @@ namespace simple_solver {
             if (onBoundary(x, y, mask)) {
                 // Boundary point. Use Dirichlet condition.
                 col.push_back(k);
-                valR.push_back(1);
-                valG.push_back(1);
-                valB.push_back(1);
+                matrix_values.push_back(1);
 
                 rhsR[k] = target.pixelColor(x, y).red();
                 rhsG[k] = target.pixelColor(x, y).green();
@@ -179,17 +173,13 @@ namespace simple_solver {
                     } else {
                         // adding value to sparse matrix
                         col.push_back(pixelsColumn[std::make_pair(nx, ny)]);
-                        valR.push_back(1);
-                        valG.push_back(1);
-                        valB.push_back(1);
+                        matrix_values.push_back(1);
                     }
 
                 }
 
                 col.push_back(k);
-                valR.push_back(-4);
-                valG.push_back(-4);
-                valB.push_back(-4);
+                matrix_values.push_back(-4);
 
                 rhsR[k] = rhsValR;
                 rhsG[k] = rhsValG;
@@ -204,49 +194,46 @@ namespace simple_solver {
     }
 
     QImage poisson(const QImage& target, const QImage& source, const QImage& mask) {
+    	using namespace std::chrono;
+    	auto time_start = high_resolution_clock::now();
+    	auto qDebugWithTs = [&] {
+    		auto delta = duration_cast<microseconds>(high_resolution_clock::now() - time_start).count();
+    		return qDebug() << "[" << (delta / 1000.) << " ms] ";
+    	};
+
 		std::vector<int> ptr;
 		std::vector<int> col;
+		std::vector<int> matrix_values;
 
-		std::vector<int> valR;
-		std::vector<int> valG;
-		std::vector<int> valB;
-
-		std::vector<int> rhsR;
-		std::vector<int> rhsG;
-		std::vector<int> rhsB;
+		std::vector<int> rhs_r;
+		std::vector<int> rhs_g;
+		std::vector<int> rhs_b;
 
 		std::vector<std::pair<int, int>> pixels;
 
-        ulong n = poisson(target, source, mask, ptr, col, valR, valG, valB, rhsR, rhsG, rhsB, pixels);
-
-        qDebug() << "Built matrix";
+        ulong n = generateMatrix(target, source, mask, ptr, col, matrix_values,
+								 rhs_r, rhs_g, rhs_b, pixels);
+		qDebugWithTs() << "Matrix ready";
 
         PoissonSolver::params prm;
         prm.solver.maxiter = 2;
+        PoissonSolver solver(boost::tie(n, ptr, col, matrix_values), prm);
+		qDebugWithTs() << "Solver ready";
 
-        PoissonSolver solveR(boost::tie(n, ptr, col, valR), prm);
-        PoissonSolver solveG(boost::tie(n, ptr, col, valG), prm);
-        PoissonSolver solveB(boost::tie(n, ptr, col, valB), prm);
-
-        std::vector<double> R(n, 0);
-		std::vector<double> G(n, 0);
-		std::vector<double> B(n, 0);
+        std::vector<double> result_r(n, 0);
+		std::vector<double> result_g(n, 0);
+		std::vector<double> result_b(n, 0);
 
 		int iters;
 		double error;
+        boost::tie(iters, error) = solver(rhs_r, result_r);
+		qDebugWithTs() << "R: error=" << error << ", iters=" << iters;
+		boost::tie(iters, error) = solver(rhs_g, result_g);
+		qDebugWithTs() << "G: error=" << error << ", iters=" << iters;
+		boost::tie(iters, error) = solver(rhs_b, result_b);
+		qDebugWithTs() << "B: error=" << error << ", iters=" << iters;
 
-        boost::tie(iters, error) = solveR(rhsR, R);
-        qDebug() << "R: error-" << error << ", iters-" << iters;
-
-        boost::tie(iters, error) = solveG(rhsG, G);
-        qDebug() << "G: error-" << error << ", iters-" << iters;
-
-        boost::tie(iters, error) = solveB(rhsB, B);
-        qDebug() << "B: error-" << error << ", iters-" << iters;
-
-
-        QImage result = target.copy();
-
+        QImage result(target);
         for (size_t i = 0; i < pixels.size(); i++) {
             int r = clip(int(result_r[i]), 0, 255);
             int g = clip(int(result_g[i]), 0, 255);
@@ -257,6 +244,8 @@ namespace simple_solver {
             int y = pixels[i].second;
             result.setPixel(x, y, c.rgb());
         }
+
+		qDebugWithTs() << "Finished\n";
 
         return result;
     }
