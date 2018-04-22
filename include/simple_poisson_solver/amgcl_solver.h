@@ -29,15 +29,10 @@ namespace amgcl_solver {
     > PoissonSolver;
 
 
-    template <typename SOLUTION_TYPE>
-    void solve(
+    QImage solve(
             const QImage& target,
             const QImage& source,
-            const QImage& mask,
-            std::vector<std::pair<int, int>>& pixels,
-            std::vector<SOLUTION_TYPE>& result_r,
-            std::vector<SOLUTION_TYPE>& result_g,
-            std::vector<SOLUTION_TYPE>& result_b
+            const QImage& mask
     ) {
 
         using namespace std::chrono;
@@ -48,7 +43,6 @@ namespace amgcl_solver {
             return qDebug() << "[" << (delta / 1000.) << " ms] ";
         };
 
-
         std::vector<int> ptr;
         std::vector<int> col;
         std::vector<int> matrix_values;
@@ -57,7 +51,12 @@ namespace amgcl_solver {
         std::vector<int> rhs_g;
         std::vector<int> rhs_b;
 
-        ulong n = generateMatrix(target, source, mask, ptr, col, matrix_values,
+        std::vector<std::pair<int, int>> pixels;
+        std::vector<double> result_r;
+        std::vector<double> result_g;
+        std::vector<double> result_b;
+
+        ulong n = matrix::generateMatrix(target, source, mask, ptr, col, matrix_values,
                                  rhs_r, rhs_g, rhs_b, pixels);
         qDebugWithTs() << "Matrix ready";
 
@@ -79,6 +78,21 @@ namespace amgcl_solver {
         qDebugWithTs() << "G: error=" << error << ", iters=" << iters;
         boost::tie(iters, error) = solver(rhs_b, result_b);
         qDebugWithTs() << "B: error=" << error << ", iters=" << iters;
+
+
+        QImage result(target);
+        for (size_t i = 0; i < pixels.size(); i++) {
+            int r = bound(int(result_r[i]));
+            int g = bound(int(result_g[i]));
+            int b = bound(int(result_b[i]));
+
+            QColor c(r, g, b);
+            int x = pixels[i].first;
+            int y = pixels[i].second;
+            result.setPixel(x, y, c.rgb());
+        }
+
+        return result;
     }
 
 

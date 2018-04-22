@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.5)
 project(gradient_painter)
 
 set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native")
 
 find_package(Qt5Widgets REQUIRED)
 # Find includes in corresponding build directories
@@ -19,7 +20,13 @@ add_subdirectory(thirdparty/amgcl)
 add_library(simple_poisson_solver SHARED
         lib/simple_poisson_solver/poisson.cpp
         lib/simple_poisson_solver/gaussian_blur.cpp
-        lib/simple_poisson_solver/matrix.cpp)
+        lib/simple_poisson_solver/matrix.cpp
+        lib/simple_poisson_solver/matrix_better.cpp
+        include/simple_poisson_solver/gauss_seidel_solver.h
+        include/simple_poisson_solver/gauss_seidel_solver_better.h
+        include/simple_poisson_solver/amgcl_solver.h
+        include/simple_poisson_solver/util.h)
+
 target_link_libraries(simple_poisson_solver Qt5::Core amgcl)
 target_include_directories(simple_poisson_solver PRIVATE include/simple_poisson_solver)
 
