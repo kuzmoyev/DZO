@@ -34,7 +34,7 @@ void Scribble::doPaint(QPainter& painter, QPen& pen, ImageType role) const {
 	for (int i = 1; i < path_.size(); i++) {
 		if (role == ImageType::IMG_STROKES) {
 			auto delta = path_[i] - path_[i - 1];
-			pen.setColor(colorFromDirection(delta.x(), delta.y()));
+			pen.setColor(utility::colorFromDirection(delta.x(), delta.y()));
 			painter.setPen(pen);
 		}
 
