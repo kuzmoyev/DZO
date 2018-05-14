@@ -1,7 +1,7 @@
-#include "simple_poisson_solver/matrix.h"
+#include "utility.h"
 
 
-namespace matrix {
+namespace utility {
     void calcMaskPixels(const QImage& img,
                         std::vector<std::pair<int, int>>& pixels,
                         std::map<std::pair<int, int>, int>& pixelsColumn) {
@@ -15,14 +15,16 @@ namespace matrix {
         }
     }
 
-    bool onBoundary(int x, int y, const QImage& mask) {
-        return (x == 0 || x == mask.width() - 1 || y == 0 || y == mask.height() - 1) ||
-               (mask.pixel(x - 1, y) != WHITE || mask.pixel(x + 1, y) != WHITE) ||
-               (mask.pixel(x, y - 1) != WHITE || mask.pixel(x, y + 1) != WHITE);
+    namespace {
+        bool onBoundary(int x, int y, const QImage& mask) {
+            return (x == 0 || x == mask.width() - 1 || y == 0 || y == mask.height() - 1) ||
+                   (mask.pixel(x - 1, y) != WHITE || mask.pixel(x + 1, y) != WHITE) ||
+                   (mask.pixel(x, y - 1) != WHITE || mask.pixel(x, y + 1) != WHITE);
+        }
     }
 
 
-    ulong generateMatrix(
+    ulong generateCrsMatrix(
             const QImage& target,
             const QImage& source,
             const QImage& mask,

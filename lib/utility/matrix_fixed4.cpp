@@ -1,11 +1,13 @@
-#include "simple_poisson_solver/matrix_better.h"
+#include "utility.h"
 
-namespace matrix_better {
-    bool onBoundary(int x, int y, const QImage& mask) {
-        return (x == 0 || x == mask.width() - 1 || y == 0 || y == mask.height() - 1) ||
-               (mask.pixel(x - 1, y) != WHITE || mask.pixel(x + 1, y) != WHITE) ||
-               (mask.pixel(x, y - 1) != WHITE || mask.pixel(x, y + 1) != WHITE);
-    }
+namespace utility {
+	namespace {
+		bool onBoundary(int x, int y, const QImage& mask) {
+			return (x == 0 || x == mask.width() - 1 || y == 0 || y == mask.height() - 1) ||
+				   (mask.pixel(x - 1, y) != WHITE || mask.pixel(x + 1, y) != WHITE) ||
+				   (mask.pixel(x, y - 1) != WHITE || mask.pixel(x, y + 1) != WHITE);
+		}
+	}
 
     uint calcMaskPixels(const QImage& mask,
                         std::vector<std::pair<int, int>>& pixels,
@@ -48,7 +50,7 @@ namespace matrix_better {
     }
 
 
-    void generateMatrix(
+    void generateFixed4Matrix(
             const QImage& target,
             const QImage& source,
             const QImage& mask,

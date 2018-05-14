@@ -7,7 +7,7 @@
 #include <QtCore/QMetaEnum>
 #include <QDebug>
 
-#include "simple_poisson_solver/poisson.h"
+#include "amgcl_solver.h"
 
 #include "canvas_model.h"
 #include "shapes/line.h"
@@ -114,7 +114,7 @@ void CanvasModel::calculatePoisson() {
 		qDebug() << "Only OVERRIDE poisson mode is supported";
 	}
 	//TODO Run in separate thread
-	getImage(ImageType::IMG_COMPOSED) = simple_solver::poisson(
+	getImage(ImageType::IMG_COMPOSED) = amgcl_solver::poisson(
 			getImage(ImageType::IMG_BG),
 			getImage(ImageType::IMG_COMPOSED),
 			getImage(ImageType::IMG_MASK));

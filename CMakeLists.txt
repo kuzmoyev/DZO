@@ -17,25 +17,27 @@ set(CMAKE_AUTOUIC ON)
 include_directories(include)
 add_subdirectory(thirdparty/amgcl)
 
-add_library(simple_poisson_solver SHARED
-        lib/simple_poisson_solver/poisson.cpp
-        lib/simple_poisson_solver/gaussian_blur.cpp
-        lib/simple_poisson_solver/matrix.cpp
-        lib/simple_poisson_solver/matrix_better.cpp
-        include/simple_poisson_solver/gauss_seidel_solver.h
-        include/simple_poisson_solver/gauss_seidel_solver_better.h
-        include/simple_poisson_solver/amgcl_solver.h
-        include/simple_poisson_solver/util.h)
+add_library(utility SHARED
+        lib/utility/utility.cpp
+        lib/utility/gaussian_blur.cpp
+        lib/utility/matrix_crs.cpp
+        lib/utility/matrix_fixed4.cpp)
+target_link_libraries(utility Qt5::Core)
 
-target_link_libraries(simple_poisson_solver Qt5::Core amgcl)
-target_include_directories(simple_poisson_solver PRIVATE include/simple_poisson_solver)
+add_library(amgcl_solver SHARED
+        lib/amgcl_solver/amgcl_solver.cpp)
+target_link_libraries(amgcl_solver amgcl utility)
+
+add_library(gauss_seidel_solver SHARED
+        lib/gauss_seidel_solver/solver.cpp)
+
+target_link_libraries(gauss_seidel_solver utility)
 
 add_executable(gradient_gui
         forms/mainwindow.cpp
         forms/sidebar.cpp
 
         src/main.cpp
-        src/utility.cpp
 
         src/shapes/line.cpp
         src/shapes/rectangle.cpp
@@ -50,8 +52,8 @@ add_executable(gradient_gui
         src/gui/clickable_label.cpp
         )
 
-target_link_libraries(gradient_gui Qt5::Widgets simple_poisson_solver amgcl)
+target_link_libraries(gradient_gui Qt5::Widgets utility amgcl_solver gauss_seidel_solver)
 target_include_directories(gradient_gui PRIVATE src)
 
 add_executable(test_app src/test_app.cpp)
-target_link_libraries(test_app Qt5::Widgets simple_poisson_solver amgcl)
+target_link_libraries(test_app Qt5::Widgets utility amgcl_solver gauss_seidel_solver)
