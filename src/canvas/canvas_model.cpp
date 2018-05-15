@@ -7,6 +7,7 @@
 #include <QtCore/QMetaEnum>
 #include <QDebug>
 
+#include "gauss_seidel_solver.h"
 #include "amgcl_solver.h"
 
 #include "canvas_model.h"
@@ -19,8 +20,10 @@ CanvasModel::CanvasModel(QSize size, const QColor& main, const QColor& alt) :
 		main_color_(main), alt_color_(alt),
 		next_shape_(ShapeType::LINE),
 		poisson_mode_(PoissonBlendingMode::OVERRIDE),
-		merging_mode_(BackgroundMergingMode::PRESERVE) {
+		merging_mode_(BackgroundMergingMode::PRESERVE),
+		current_solver_(SolverType::AMGCL) {
 	setCanvasSize(size);
+	connect(&solver_future_, &QFutureWatcher<QImage>::finished, this, &CanvasModel::solverFinished, Qt::QueuedConnection);
 }
 
 const QImage& CanvasModel::getImage(ImageType type) const {
@@ -53,6 +56,10 @@ PoissonBlendingMode CanvasModel::getPoissonMode() const {
 
 BackgroundMergingMode CanvasModel::getMergingMode() const {
 	return merging_mode_;
+}
+
+SolverType CanvasModel::getCurrentSolver() const {
+	return current_solver_;
 }
 
 void CanvasModel::setCanvasSize(QSize size) {
@@ -109,21 +116,22 @@ void CanvasModel::setAltColor(QColor color) {
 	}
 }
 
-void CanvasModel::calculatePoisson() {
+void CanvasModel::startPoisson() {
 	if (poisson_mode_ != PoissonBlendingMode::OVERRIDE) {
 		qDebug() << "Only OVERRIDE poisson mode is supported";
 	}
-	//TODO Run in separate thread
-	getImage(ImageType::IMG_COMPOSED) = amgcl_solver::poisson(
-			getImage(ImageType::IMG_BG),
-			getImage(ImageType::IMG_COMPOSED),
-			getImage(ImageType::IMG_MASK));
-	if (merging_mode_ == BackgroundMergingMode::REPLACE) {
-		qDebug() << "Only PRESERVE merging mode is supported";
-		/*getImage(ImageType::IMG_BG) = getImage(ImageType::IMG_COMPOSED);
-		shapes_.clear();*/
+	if (solver_future_.isRunning()) {
+		qDebug() << "Solver still running, won't start the second one";
+		return;
 	}
-	emit canvasUpdated(getImage(ImageType::IMG_COMPOSED).rect());
+
+	auto solver = getSolver();
+	solver_future_.setFuture(QtConcurrent::run(solver,
+					  getImage(ImageType::IMG_BG),
+					  getImage(ImageType::IMG_COMPOSED),
+					  getImage(ImageType::IMG_MASK)));
+
+	emit startedSolver();
 }
 
 void CanvasModel::setNextShape(ShapeType shape) {
@@ -134,8 +142,23 @@ void CanvasModel::setPoissonMode(PoissonBlendingMode mode) {
 	poisson_mode_ = mode;
 }
 
+void CanvasModel::setSolver(SolverType s) {
+	current_solver_ = s;
+}
+
 void CanvasModel::setMergingMode(BackgroundMergingMode mode) {
 	merging_mode_ = mode;
+}
+
+void CanvasModel::solverFinished() {
+	getImage(ImageType::IMG_COMPOSED) = solver_future_.result();
+	if (merging_mode_ == BackgroundMergingMode::REPLACE) {
+		qDebug() << "Only PRESERVE merging mode is supported";
+		/*getImage(ImageType::IMG_BG) = getImage(ImageType::IMG_COMPOSED);
+		shapes_.clear();*/
+	}
+	emit stoppedSolver();
+	emit canvasUpdated(getImage(ImageType::IMG_COMPOSED).rect());
 }
 
 void CanvasModel::updateCanvas(const QRect& clipping_region, bool emit_signal) {
@@ -182,3 +205,15 @@ Shape CanvasModel::createShape() {
 	}
 }
 
+CanvasModel::solver_t CanvasModel::getSolver() const {
+	switch (current_solver_) {
+		case SolverType::AMGCL:
+			return amgcl_solver::poisson;
+		case SolverType::PS_CPU:
+			return gauss_seidel_solver::poisson;
+		case SolverType::PS_GPU:
+			throw std::runtime_error("CUDA not supported");
+	}
+
+	return amgcl_solver::poisson;
+}

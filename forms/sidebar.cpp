@@ -1,6 +1,7 @@
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QColorDialog>
 #include <QDebug>
+#include <QtWidgets/QVBoxLayout>
 
 #include "sidebar.h"
 #include "ui_sidebar.h"
@@ -14,10 +15,13 @@ Sidebar::Sidebar(CanvasModel& model, QWidget* parent) :
 	initCanvasSizeLe();
 	initColorButtons();
 	initShapeSelector();
-	initPoissonModeSelector();
-	initMergingModeSelector();
+	initSolverSelector();
+	//initMergingModeSelector();
 
-	connect(ui->run_btn_, &QPushButton::clicked, &model_, &CanvasModel::calculatePoisson);
+	connect(ui->run_btn_, &QPushButton::clicked, &model_, &CanvasModel::startPoisson);
+
+	connect(&model, &CanvasModel::startedSolver, this, &Sidebar::deactivateRunBtn);
+	connect(&model, &CanvasModel::stoppedSolver, this, &Sidebar::activateRunBtn);
 }
 
 Sidebar::~Sidebar() {
@@ -44,6 +48,16 @@ void Sidebar::setRunState(bool on) {
 void Sidebar::updateColors(QColor main, QColor alt) {
 	main_color_btn_->setStyleSheet("QLabel {background-color:" + main.name() + "}");
 	alt_color_btn_->setStyleSheet("QLabel {background-color:" + alt.name() + "}");
+}
+
+void Sidebar::deactivateRunBtn() {
+	qDebug() << "deactivate";
+	ui->run_btn_->setEnabled(false);
+	ui->run_btn_->setText("Running");
+}
+void Sidebar::activateRunBtn() {
+	ui->run_btn_->setEnabled(true);
+	ui->run_btn_->setText("Run");
 }
 
 
@@ -153,35 +167,43 @@ void Sidebar::initShapeSelector() {
 	connect(this, &Sidebar::nextShapeChanged, &model_, &CanvasModel::setNextShape);
 }
 
-void Sidebar::initPoissonModeSelector() {
+void Sidebar::initSolverSelector() {
 	auto layout = new QVBoxLayout();
 
-	auto override_btn = new QRadioButton("Override");
-	layout->addWidget(override_btn);
+	auto amgcl_btn = new QRadioButton("Amgcl");
+	layout->addWidget(amgcl_btn);
 
-	auto blend_btn = new QRadioButton("Blend");
-	layout->addWidget(blend_btn);
+	auto ps_cpu_btn = new QRadioButton("Gauss-Seigel CPU");
+	layout->addWidget(ps_cpu_btn);
 
-	auto group_box = new QGroupBox("Poisson mode");
+	auto ps_gpu_btn = new QRadioButton("Gauss-Seigel GPU");
+	layout->addWidget(ps_gpu_btn);
+	ps_gpu_btn->setEnabled(false);
+
+
+	auto group_box = new QGroupBox("Solver");
 	group_box->setLayout(layout);
 
-	switch (model_.getPoissonMode()) {
-		case PoissonBlendingMode::OVERRIDE:
-			override_btn->toggle();
+	switch (model_.getCurrentSolver()) {
+		case SolverType::AMGCL:
+			amgcl_btn->toggle();
 			break;
-		case PoissonBlendingMode::BLEND:
-			blend_btn->toggle();
+		case SolverType::PS_CPU:
+		case SolverType::PS_GPU:
+			ps_cpu_btn->toggle();
 			break;
 	}
 
 	ui->layout_->insertWidget(ui->layout_->count() - 2, group_box);
 
-	connect(override_btn, &QRadioButton::pressed,
-			[&] { emit poissonModeChanged(PoissonBlendingMode::OVERRIDE); });
-	connect(blend_btn, &QRadioButton::pressed,
-			[&] { emit poissonModeChanged(PoissonBlendingMode::BLEND); });
+	connect(amgcl_btn, &QRadioButton::pressed,
+			[&] { emit solverChanged(SolverType::AMGCL); });
+	connect(ps_cpu_btn, &QRadioButton::pressed,
+			[&] { emit solverChanged(SolverType::PS_CPU); });
+	connect(ps_gpu_btn, &QRadioButton::pressed,
+			[&] { emit solverChanged(SolverType::PS_GPU); });
 
-	connect(this, &Sidebar::poissonModeChanged, &model_, &CanvasModel::setPoissonMode);
+	connect(this, &Sidebar::solverChanged, &model_, &CanvasModel::setSolver);
 }
 
 void Sidebar::initMergingModeSelector() {
