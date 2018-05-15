@@ -1,6 +1,7 @@
 #include <vector>
 
 #include <boost/tuple/tuple.hpp>
+#include <QtConcurrent/QtConcurrent>
 
 #include "utility.h"
 
@@ -92,9 +93,15 @@ namespace gauss_seidel_solver {
 
 
 		int iterations = MAX_OPERATIONS / int(pixels.size());
-		gauss_seidel_solve(mat, rhs_r, sol_r, iterations);
-		gauss_seidel_solve(mat, rhs_g, sol_g, iterations);
+		auto future_r = QtConcurrent::run([&] {
+			gauss_seidel_solve(mat, rhs_r, sol_r, iterations);
+		});
+		auto future_g = QtConcurrent::run([&] {
+			gauss_seidel_solve(mat, rhs_g, sol_g, iterations);
+		});
 		gauss_seidel_solve(mat, rhs_b, sol_b, iterations);
+		future_r.waitForFinished();
+		future_g.waitForFinished();
 
 		qDebugWithTs() << "Solved in" << iterations << "iterations";
 
