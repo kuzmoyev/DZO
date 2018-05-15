@@ -36,6 +36,8 @@ class Sidebar : public QWidget {
 	void setRedoState(bool);
 	void setRunState(bool);
 	void updateColors(QColor main, QColor alt);
+	void deactivateRunBtn();
+	void activateRunBtn();
 
   private slots:
 	void sizeLeChanged();

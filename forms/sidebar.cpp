@@ -1,6 +1,7 @@
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QColorDialog>
 #include <QDebug>
+#include <QtWidgets/QVBoxLayout>
 
 #include "sidebar.h"
 #include "ui_sidebar.h"
@@ -17,7 +18,10 @@ Sidebar::Sidebar(CanvasModel& model, QWidget* parent) :
 	initSolverSelector();
 	//initMergingModeSelector();
 
-	connect(ui->run_btn_, &QPushButton::clicked, &model_, &CanvasModel::calculatePoisson);
+	connect(ui->run_btn_, &QPushButton::clicked, &model_, &CanvasModel::startPoisson);
+
+	connect(&model, &CanvasModel::startedSolver, this, &Sidebar::deactivateRunBtn);
+	connect(&model, &CanvasModel::stoppedSolver, this, &Sidebar::activateRunBtn);
 }
 
 Sidebar::~Sidebar() {
@@ -44,6 +48,16 @@ void Sidebar::setRunState(bool on) {
 void Sidebar::updateColors(QColor main, QColor alt) {
 	main_color_btn_->setStyleSheet("QLabel {background-color:" + main.name() + "}");
 	alt_color_btn_->setStyleSheet("QLabel {background-color:" + alt.name() + "}");
+}
+
+void Sidebar::deactivateRunBtn() {
+	qDebug() << "deactivate";
+	ui->run_btn_->setEnabled(false);
+	ui->run_btn_->setText("Running");
+}
+void Sidebar::activateRunBtn() {
+	ui->run_btn_->setEnabled(true);
+	ui->run_btn_->setText("Run");
 }
 
 
