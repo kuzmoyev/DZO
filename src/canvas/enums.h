@@ -33,11 +33,17 @@ class Enums : public QObject {
 		PRESERVE, REPLACE
 	};
 	Q_ENUM(BackgroundMergingMode)
+
+	enum class SolverType {
+		AMGCL, PS_CPU, PS_GPU
+	};
+	Q_ENUM(SolverType)
 };
 
 using ImageType = Enums::ImageType;
 using ShapeType = Enums::ShapeType;
 using PoissonBlendingMode = Enums::PoissonBlendingMode;
 using BackgroundMergingMode = Enums::BackgroundMergingMode;
+using SolverType = Enums::SolverType;
 
 #endif //GRADIENT_PAINTER_IMAGE_TYPE_H

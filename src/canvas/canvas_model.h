@@ -10,6 +10,7 @@
 
 #include <memory>
 
+#include <QtConcurrent/QtConcurrent>
 #include <QtCore/QObject>
 #include <QtCore/QRect>
 #include <QtGui/QImage>
@@ -22,10 +23,12 @@
 class CanvasModel : public QObject {
   Q_OBJECT
 
+  	using solver_t = QImage(*)(const QImage&, const QImage&, const QImage&);
   public:
+
 	explicit CanvasModel(QSize size, const QColor& main, const QColor& alt);
 
-	const QImage& getImage(ImageType type) const;
+  const QImage& getImage(ImageType type) const;
 	QImage& getImage(ImageType type);
 	const QSize& getCanvasSize() const;
 	const QColor& getMainColor() const;
@@ -33,6 +36,7 @@ class CanvasModel : public QObject {
 	ShapeType getNextShape() const;
 	PoissonBlendingMode getPoissonMode() const;
 	BackgroundMergingMode getMergingMode() const;
+	SolverType getCurrentSolver() const;
 
   signals:
 	void canvasUpdated(QRect bounds);
@@ -40,6 +44,8 @@ class CanvasModel : public QObject {
 	void startedPainting();
 	void stoppedPainting();
 	void colorsUpdated(QColor main, QColor alt);
+	void startedSolver();
+	void stoppedSolver();
 
   public slots:
 	// void setShapeFactory();
@@ -49,18 +55,23 @@ class CanvasModel : public QObject {
 	void onMouseUp(QPoint pos);
 	void setMainColor(QColor);
 	void setAltColor(QColor);
-	void calculatePoisson();
+	void startPoisson();
 	void setNextShape(ShapeType);
 	void setPoissonMode(PoissonBlendingMode);
+	void setSolver(SolverType);
 	void setMergingMode(BackgroundMergingMode);
+	void solverFinished();
 
 
   private:
 	void updateCanvas(const QRect& clipping_region, bool emit_signal);
 	Shape createShape();
+	solver_t getSolver() const;
 
 	QVector<QImage> images_;
 	QVector<Shape> shapes_;
+
+	QFutureWatcher<QImage> solver_future_;
 
 	QSize size_;
 	QColor main_color_;
@@ -68,6 +79,7 @@ class CanvasModel : public QObject {
 	ShapeType next_shape_;
 	PoissonBlendingMode poisson_mode_;
 	BackgroundMergingMode merging_mode_;
+	SolverType current_solver_;
 };
 
 

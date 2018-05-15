@@ -1,6 +1,7 @@
 #include <vector>
 
 #include <boost/tuple/tuple.hpp>
+#include <QtConcurrent/QtConcurrent>
 
 #include "utility.h"
 
@@ -50,8 +51,7 @@ namespace gauss_seidel_solver {
 			const QImage& target,
 			const QImage& source,
 			const QImage& mask,
-			bool reset_log
-	) {
+			bool reset_log) {
 		if (reset_log)
 			log_start = high_resolution_clock::now();
 
@@ -65,10 +65,8 @@ namespace gauss_seidel_solver {
 		std::vector<int> rhs_r;
 		std::vector<int> rhs_g;
 		std::vector<int> rhs_b;
-
 		utility::generateFixed4Matrix(target, source, mask, mat, sol_r, sol_g, sol_b, rhs_r, rhs_g, rhs_b,
 											pixels);
-
 		qDebugWithTs() << "Matrix ready";
 
 		if (pixels.size() >= TOO_MANY_PIXELS) {
@@ -95,9 +93,15 @@ namespace gauss_seidel_solver {
 
 
 		int iterations = MAX_OPERATIONS / int(pixels.size());
-		gauss_seidel_solve(mat, rhs_r, sol_r, iterations);
-		gauss_seidel_solve(mat, rhs_g, sol_g, iterations);
+		auto future_r = QtConcurrent::run([&] {
+			gauss_seidel_solve(mat, rhs_r, sol_r, iterations);
+		});
+		auto future_g = QtConcurrent::run([&] {
+			gauss_seidel_solve(mat, rhs_g, sol_g, iterations);
+		});
 		gauss_seidel_solve(mat, rhs_b, sol_b, iterations);
+		future_r.waitForFinished();
+		future_g.waitForFinished();
 
 		qDebugWithTs() << "Solved in" << iterations << "iterations";
 
@@ -114,6 +118,13 @@ namespace gauss_seidel_solver {
 		}
 
 		return result;
+	}
+
+	QImage poisson(
+			const QImage& target,
+			const QImage& source,
+			const QImage& mask) {
+		return poisson(target, source, mask, true);
 	}
 
 
