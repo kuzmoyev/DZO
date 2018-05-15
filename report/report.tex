@@ -30,7 +30,7 @@
 
 \graphicspath{{img/}}
 
-\title{(Real-Time) Gradient-Domain Painting}
+\title{(Nearly almost Real-Time but not quite) Gradient-Domain Painting}
 
 \author{Viacheslav Kroilov, Yevhen Kuzmovych}
 \affiliation{ČVUT - FIT}
@@ -95,7 +95,7 @@ Which in our case means for each pixel $x,y$ in the mask solving:
     \label{eq:poisson}
 \end{equation}
 
-where $I$ is the resulting image and boundary conditions on the edges of the image and on the users' strokes. Boundary
+where $I$ is the resulting image with boundary conditions on the edges of the image and on the users' strokes. Boundary
 conditions means that pixels on $\delta$ are known and $I_{x,y}$ for $ (x,y) \in \delta$ are replaced with
 known $T_{x,y}$.
 
@@ -114,9 +114,9 @@ method, iterative algorithm for solving large sparse linear systems. In the fram
 Application is implemented in C++ programing language with the usage of the following libraries:
 
 \begin{itemize}
-    \item \textbf{Qt framework}. Framework, used for GUI and image processing.
+    \item \textbf{Qt framework}. Framework used for GUI and image processing.
     \item \textbf{amgcl}. Library for solving large sparse linear systems with algebraic multigrid method. It was used
-    as a solver on the initial stages of development.
+    as a solver on the initial stages of the development.
     \item \textbf{CUDA}. Framework for parallelization of the computations on the Nvidia video cards.
 \end{itemize}
 
@@ -174,20 +174,18 @@ more iterations and consequently more computation time. The solution is the \tex
 multigrid is in precomputing solution on the smaller image and initializing solution vector with precomputed values
 instead of random values (or all 125s as in our implementation). This method allows to perform much more iterations on
 a smaller image in a short period of time and much less iterations on the original image. We scale image recursively
-down to image $5 \times 5$ and perform $\approx 381000$ iterations while on the original image ($300 \time 300$) only
+down to image $5 \times 5$ and perform $\approx 381000$ iterations while on the original image ($300 \times 300$) only
 $\approx 6000$ iterations.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Outputs}
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Possible improvements}
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Conclusion}
+
+In frameworks of this project, we've implemented application with graphical interface that allows user to draw in
+the gradient-domain using gradient brash in real-time (not really  $\approx 0.2$ fps).
+
+Gradient painting is performed using gauss-seidel algorithm with multigrid optimization. Implementation is also
+parallelized with CUDA framework on the GPU .
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
