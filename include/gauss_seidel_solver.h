@@ -10,4 +10,11 @@ namespace gauss_seidel_solver {
 			const QImage& source,
 			const QImage& mask
 	);
+
+	QImage poisson_impl(
+			const QImage& target,
+			const QImage& source,
+			const QImage& mask,
+			unsigned int iterations
+	);
 }

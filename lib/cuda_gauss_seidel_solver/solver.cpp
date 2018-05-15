@@ -2,19 +2,20 @@
 
 #include <boost/tuple/tuple.hpp>
 #include <QtConcurrent/QtConcurrent>
+#include <include/gauss_seidel_solver.h>
 
+#include "cuda_gauss_seidel_solver.h"
 #include "utility.h"
 
 using namespace std;
 
-namespace gauss_seidel_solver {
-
+namespace cuda_gauss_seidel_solver {
+	using namespace std::chrono;
 
 	const size_t TOO_MANY_PIXELS = 5 * 5;
+	const size_t CPU_THRESHOLD = 16 * 16;
 	const uint RESIZE_FACTOR = 2;
 
-
-	using namespace std::chrono;
 	auto log_start = high_resolution_clock::now();
 
 	auto qDebugWithTs() {
@@ -22,35 +23,12 @@ namespace gauss_seidel_solver {
 		return qDebug() << "[" << (delta / 1000.) << "\tms] ";
 	}
 
-
-	template <typename SOLUTION_TYPE>
-	void gauss_seidel_solve(
-			const std::vector<std::array<int, 4>>& mat,
-			const std::vector<int>& rhs,
-			std::vector<SOLUTION_TYPE>& sol,
-			int iterations
-	) {
-		vector<SOLUTION_TYPE> tmp_sol(sol);
-
-		for (int it = 0; it < iterations; it++) {
-			for (size_t p = 0; p < mat.size(); p++) {
-				SOLUTION_TYPE row_res = rhs[p];
-
-				for (auto n : mat[p]) {
-					row_res -= sol[n];
-				}
-
-				tmp_sol[p] = row_res / -4;
-			}
-			swap(sol, tmp_sol);
-		}
-	}
-
 	QImage poisson_impl(
 			const QImage& target,
 			const QImage& source,
 			const QImage& mask,
 			unsigned int iterations) {
+
 		std::vector<std::pair<int, int>> pixels;
 		std::vector<float> sol_r;
 		std::vector<float> sol_g;
@@ -62,7 +40,7 @@ namespace gauss_seidel_solver {
 		std::vector<int> rhs_g;
 		std::vector<int> rhs_b;
 		utility::generateFixed4Matrix(target, source, mask, mat, sol_r, sol_g, sol_b, rhs_r, rhs_g, rhs_b,
-											pixels);
+									  pixels);
 
 		if (pixels.size() >= TOO_MANY_PIXELS) {
 			// Precompute results on a smaller image
@@ -70,8 +48,15 @@ namespace gauss_seidel_solver {
 			auto tmp_source = source.scaled(source.width() / RESIZE_FACTOR, source.height() / RESIZE_FACTOR);
 			auto tmp_mask = mask.scaled(mask.width() / RESIZE_FACTOR, mask.height() / RESIZE_FACTOR);
 
-			auto tmp_result = poisson_impl(tmp_target, tmp_source, tmp_mask, iterations * RESIZE_FACTOR).
-					scaled(target.width(), target.height());
+			QImage tmp_result;
+			if (pixels.size() >= CPU_THRESHOLD) {
+				tmp_result = poisson_impl(tmp_target, tmp_source, tmp_mask, iterations * RESIZE_FACTOR);
+			} else {
+				tmp_result = gauss_seidel_solver::poisson_impl(
+						tmp_target, tmp_source, tmp_mask,
+						iterations * RESIZE_FACTOR);
+			}
+			tmp_result = tmp_result.scaled(target.width(), target.height());
 
 			int x, y;
 			for (size_t i = 0; i < mat.size(); i++) {
@@ -92,7 +77,7 @@ namespace gauss_seidel_solver {
 		gauss_seidel_solve(mat, rhs_g, sol_g, iterations);
 		gauss_seidel_solve(mat, rhs_b, sol_b, iterations);
 
-		qDebugWithTs() << "Solved in" << iterations << "iterations [CPU]";
+		qDebugWithTs() << "Solved in" << iterations << "iterations [GPU]";
 
 		QImage result(target);
 		int x, y;
@@ -113,9 +98,13 @@ namespace gauss_seidel_solver {
 			const QImage& target,
 			const QImage& source,
 			const QImage& mask) {
-		log_start = high_resolution_clock::now();
 		const uint max_iterations = 2 << 28;
 		const int img_size = target.size().height() * target.size().width();
-		return poisson_impl(target, source, mask, max_iterations / img_size);
+		try {
+			log_start = high_resolution_clock::now();
+			return poisson_impl(target, source, mask, max_iterations / img_size);
+		} catch (std::runtime_error&) {
+			return {};
+		}
 	}
 }

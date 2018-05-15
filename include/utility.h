@@ -17,7 +17,6 @@ namespace utility {
 		return std::max(std::min(x, max), min);
 	}
 
-
 	QRect rectFrom2Points(const QPoint& a, const QPoint& b);
 
 	QColor colorFromDirection(float delta_x, float delta_y);

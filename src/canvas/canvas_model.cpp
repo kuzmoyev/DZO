@@ -7,6 +7,7 @@
 #include <QtCore/QMetaEnum>
 #include <QDebug>
 
+#include "cuda_gauss_seidel_solver.h"
 #include "gauss_seidel_solver.h"
 #include "amgcl_solver.h"
 
@@ -125,6 +126,9 @@ void CanvasModel::startPoisson() {
 		return;
 	}
 
+	QPainter filler(&getImage(ImageType::IMG_COMPOSED));
+	filler.fillRect(getImage(ImageType::IMG_COMPOSED).rect(), Qt::white);
+
 	auto solver = getSolver();
 	solver_future_.setFuture(QtConcurrent::run(solver,
 					  getImage(ImageType::IMG_BG),
@@ -212,7 +216,7 @@ CanvasModel::solver_t CanvasModel::getSolver() const {
 		case SolverType::PS_CPU:
 			return gauss_seidel_solver::poisson;
 		case SolverType::PS_GPU:
-			throw std::runtime_error("CUDA not supported");
+			return cuda_gauss_seidel_solver::poisson;
 	}
 
 	return amgcl_solver::poisson;

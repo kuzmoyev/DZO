@@ -51,7 +51,6 @@ void Sidebar::updateColors(QColor main, QColor alt) {
 }
 
 void Sidebar::deactivateRunBtn() {
-	qDebug() << "deactivate";
 	ui->run_btn_->setEnabled(false);
 	ui->run_btn_->setText("Running");
 }
@@ -173,12 +172,11 @@ void Sidebar::initSolverSelector() {
 	auto amgcl_btn = new QRadioButton("Amgcl");
 	layout->addWidget(amgcl_btn);
 
-	auto ps_cpu_btn = new QRadioButton("Gauss-Seigel CPU");
+	auto ps_cpu_btn = new QRadioButton("Gauss-Seigel");
 	layout->addWidget(ps_cpu_btn);
 
-	auto ps_gpu_btn = new QRadioButton("Gauss-Seigel GPU");
+	auto ps_gpu_btn = new QRadioButton("Gauss-Seigel CUDA");
 	layout->addWidget(ps_gpu_btn);
-	ps_gpu_btn->setEnabled(false);
 
 
 	auto group_box = new QGroupBox("Solver");
