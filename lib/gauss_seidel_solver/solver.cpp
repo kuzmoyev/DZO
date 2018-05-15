@@ -65,10 +65,10 @@ namespace gauss_seidel_solver {
 		std::vector<int> rhs_r;
 		std::vector<int> rhs_g;
 		std::vector<int> rhs_b;
-
+		qDebug() << "$2";
 		utility::generateFixed4Matrix(target, source, mask, mat, sol_r, sol_g, sol_b, rhs_r, rhs_g, rhs_b,
 											pixels);
-
+		qDebug() << "$3";
 		qDebugWithTs() << "Matrix ready";
 
 		if (pixels.size() >= TOO_MANY_PIXELS) {
@@ -114,6 +114,14 @@ namespace gauss_seidel_solver {
 		}
 
 		return result;
+	}
+
+	QImage poisson(
+			const QImage& target,
+			const QImage& source,
+			const QImage& mask) {
+		qDebug() << "$1";
+		return poisson(target, source, mask, true);
 	}
 
 

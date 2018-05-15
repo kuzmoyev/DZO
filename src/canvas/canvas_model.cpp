@@ -6,6 +6,7 @@
 
 #include <QtCore/QMetaEnum>
 #include <QDebug>
+#include <include/gauss_seidel_solver.h>
 
 #include "amgcl_solver.h"
 
@@ -19,7 +20,8 @@ CanvasModel::CanvasModel(QSize size, const QColor& main, const QColor& alt) :
 		main_color_(main), alt_color_(alt),
 		next_shape_(ShapeType::LINE),
 		poisson_mode_(PoissonBlendingMode::OVERRIDE),
-		merging_mode_(BackgroundMergingMode::PRESERVE) {
+		merging_mode_(BackgroundMergingMode::PRESERVE),
+		current_solver_(SolverType::AMGCL) {
 	setCanvasSize(size);
 }
 
@@ -53,6 +55,10 @@ PoissonBlendingMode CanvasModel::getPoissonMode() const {
 
 BackgroundMergingMode CanvasModel::getMergingMode() const {
 	return merging_mode_;
+}
+
+SolverType CanvasModel::getCurrentSolver() const {
+	return current_solver_;
 }
 
 void CanvasModel::setCanvasSize(QSize size) {
@@ -113,8 +119,9 @@ void CanvasModel::calculatePoisson() {
 	if (poisson_mode_ != PoissonBlendingMode::OVERRIDE) {
 		qDebug() << "Only OVERRIDE poisson mode is supported";
 	}
+	qDebug() << "$0";
 	//TODO Run in separate thread
-	getImage(ImageType::IMG_COMPOSED) = amgcl_solver::poisson(
+	getImage(ImageType::IMG_COMPOSED) = getSolver()(
 			getImage(ImageType::IMG_BG),
 			getImage(ImageType::IMG_COMPOSED),
 			getImage(ImageType::IMG_MASK));
@@ -132,6 +139,10 @@ void CanvasModel::setNextShape(ShapeType shape) {
 
 void CanvasModel::setPoissonMode(PoissonBlendingMode mode) {
 	poisson_mode_ = mode;
+}
+
+void CanvasModel::setSolver(SolverType s) {
+	current_solver_ = s;
 }
 
 void CanvasModel::setMergingMode(BackgroundMergingMode mode) {
@@ -182,3 +193,14 @@ Shape CanvasModel::createShape() {
 	}
 }
 
+CanvasModel::solver_t CanvasModel::getSolver() const {
+	switch (current_solver_) {
+		case SolverType::AMGCL:
+			return amgcl_solver::poisson;
+		case SolverType::PS_CPU:
+			return gauss_seidel_solver::poisson;
+		case SolverType::PS_GPU:
+			throw std::runtime_error("CUDA not supported");
+	}
+
+}

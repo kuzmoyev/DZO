@@ -22,10 +22,12 @@
 class CanvasModel : public QObject {
   Q_OBJECT
 
+  	using solver_t = QImage(*)(const QImage&, const QImage&, const QImage&);
   public:
+
 	explicit CanvasModel(QSize size, const QColor& main, const QColor& alt);
 
-	const QImage& getImage(ImageType type) const;
+  const QImage& getImage(ImageType type) const;
 	QImage& getImage(ImageType type);
 	const QSize& getCanvasSize() const;
 	const QColor& getMainColor() const;
@@ -33,6 +35,7 @@ class CanvasModel : public QObject {
 	ShapeType getNextShape() const;
 	PoissonBlendingMode getPoissonMode() const;
 	BackgroundMergingMode getMergingMode() const;
+	SolverType getCurrentSolver() const;
 
   signals:
 	void canvasUpdated(QRect bounds);
@@ -52,12 +55,14 @@ class CanvasModel : public QObject {
 	void calculatePoisson();
 	void setNextShape(ShapeType);
 	void setPoissonMode(PoissonBlendingMode);
+	void setSolver(SolverType);
 	void setMergingMode(BackgroundMergingMode);
 
 
   private:
 	void updateCanvas(const QRect& clipping_region, bool emit_signal);
 	Shape createShape();
+	solver_t getSolver() const;
 
 	QVector<QImage> images_;
 	QVector<Shape> shapes_;
@@ -68,6 +73,7 @@ class CanvasModel : public QObject {
 	ShapeType next_shape_;
 	PoissonBlendingMode poisson_mode_;
 	BackgroundMergingMode merging_mode_;
+	SolverType current_solver_;
 };
 
 
