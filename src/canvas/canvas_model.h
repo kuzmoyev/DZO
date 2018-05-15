@@ -10,6 +10,7 @@
 
 #include <memory>
 
+#include <QtConcurrent/QtConcurrent>
 #include <QtCore/QObject>
 #include <QtCore/QRect>
 #include <QtGui/QImage>
@@ -43,6 +44,8 @@ class CanvasModel : public QObject {
 	void startedPainting();
 	void stoppedPainting();
 	void colorsUpdated(QColor main, QColor alt);
+	void startedSolver();
+	void stoppedSolver();
 
   public slots:
 	// void setShapeFactory();
@@ -52,11 +55,12 @@ class CanvasModel : public QObject {
 	void onMouseUp(QPoint pos);
 	void setMainColor(QColor);
 	void setAltColor(QColor);
-	void calculatePoisson();
+	void startPoisson();
 	void setNextShape(ShapeType);
 	void setPoissonMode(PoissonBlendingMode);
 	void setSolver(SolverType);
 	void setMergingMode(BackgroundMergingMode);
+	void solverFinished();
 
 
   private:
@@ -66,6 +70,8 @@ class CanvasModel : public QObject {
 
 	QVector<QImage> images_;
 	QVector<Shape> shapes_;
+
+	QFutureWatcher<QImage> solver_future_;
 
 	QSize size_;
 	QColor main_color_;

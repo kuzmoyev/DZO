@@ -6,8 +6,8 @@
 
 #include <QtCore/QMetaEnum>
 #include <QDebug>
-#include <include/gauss_seidel_solver.h>
 
+#include "gauss_seidel_solver.h"
 #include "amgcl_solver.h"
 
 #include "canvas_model.h"
@@ -23,6 +23,7 @@ CanvasModel::CanvasModel(QSize size, const QColor& main, const QColor& alt) :
 		merging_mode_(BackgroundMergingMode::PRESERVE),
 		current_solver_(SolverType::AMGCL) {
 	setCanvasSize(size);
+	connect(&solver_future_, &QFutureWatcher<QImage>::finished, this, &CanvasModel::solverFinished, Qt::QueuedConnection);
 }
 
 const QImage& CanvasModel::getImage(ImageType type) const {
@@ -115,22 +116,22 @@ void CanvasModel::setAltColor(QColor color) {
 	}
 }
 
-void CanvasModel::calculatePoisson() {
+void CanvasModel::startPoisson() {
 	if (poisson_mode_ != PoissonBlendingMode::OVERRIDE) {
 		qDebug() << "Only OVERRIDE poisson mode is supported";
 	}
-	qDebug() << "$0";
-	//TODO Run in separate thread
-	getImage(ImageType::IMG_COMPOSED) = getSolver()(
-			getImage(ImageType::IMG_BG),
-			getImage(ImageType::IMG_COMPOSED),
-			getImage(ImageType::IMG_MASK));
-	if (merging_mode_ == BackgroundMergingMode::REPLACE) {
-		qDebug() << "Only PRESERVE merging mode is supported";
-		/*getImage(ImageType::IMG_BG) = getImage(ImageType::IMG_COMPOSED);
-		shapes_.clear();*/
+	if (solver_future_.isRunning()) {
+		qDebug() << "Solver still running, won't start the second one";
+		return;
 	}
-	emit canvasUpdated(getImage(ImageType::IMG_COMPOSED).rect());
+
+	auto solver = getSolver();
+	solver_future_.setFuture(QtConcurrent::run(solver,
+					  getImage(ImageType::IMG_BG),
+					  getImage(ImageType::IMG_COMPOSED),
+					  getImage(ImageType::IMG_MASK)));
+
+	emit startedSolver();
 }
 
 void CanvasModel::setNextShape(ShapeType shape) {
@@ -147,6 +148,17 @@ void CanvasModel::setSolver(SolverType s) {
 
 void CanvasModel::setMergingMode(BackgroundMergingMode mode) {
 	merging_mode_ = mode;
+}
+
+void CanvasModel::solverFinished() {
+	getImage(ImageType::IMG_COMPOSED) = solver_future_.result();
+	if (merging_mode_ == BackgroundMergingMode::REPLACE) {
+		qDebug() << "Only PRESERVE merging mode is supported";
+		/*getImage(ImageType::IMG_BG) = getImage(ImageType::IMG_COMPOSED);
+		shapes_.clear();*/
+	}
+	emit stoppedSolver();
+	emit canvasUpdated(getImage(ImageType::IMG_COMPOSED).rect());
 }
 
 void CanvasModel::updateCanvas(const QRect& clipping_region, bool emit_signal) {
@@ -203,4 +215,5 @@ CanvasModel::solver_t CanvasModel::getSolver() const {
 			throw std::runtime_error("CUDA not supported");
 	}
 
+	return amgcl_solver::poisson;
 }
