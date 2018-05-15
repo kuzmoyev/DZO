@@ -172,10 +172,10 @@ void Sidebar::initSolverSelector() {
 	auto amgcl_btn = new QRadioButton("Amgcl");
 	layout->addWidget(amgcl_btn);
 
-	auto ps_cpu_btn = new QRadioButton("Gauss-Seigel");
+	auto ps_cpu_btn = new QRadioButton("Gauss-Seidel");
 	layout->addWidget(ps_cpu_btn);
 
-	auto ps_gpu_btn = new QRadioButton("Gauss-Seigel CUDA");
+	auto ps_gpu_btn = new QRadioButton("Gauss-Seidel CUDA");
 	layout->addWidget(ps_gpu_btn);
 
 

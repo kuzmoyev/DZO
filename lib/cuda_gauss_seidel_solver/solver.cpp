@@ -98,7 +98,7 @@ namespace cuda_gauss_seidel_solver {
 			const QImage& target,
 			const QImage& source,
 			const QImage& mask) {
-		const uint max_iterations = 2 << 28;
+		const uint max_iterations = 2 << 27;
 		const int img_size = target.size().height() * target.size().width();
 		try {
 			log_start = high_resolution_clock::now();
