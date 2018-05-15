@@ -10,9 +10,9 @@ PDF_FILE=${TEX_FILE/tex/pdf}
 LOG_FILE=${OUT_DIR}/compilation.log
 
 mkdir -p ${OUT_DIR}
-#pdflatex -halt-on-error -file-line-error -interaction=nonstopmode -output-directory=${OUT_DIR} \
-#         ${TEX_FILE} > ${LOG_FILE} && \
-#bibtex -terse -min-crossrefs=1 ${AUX_FILE} && \
+pdflatex -halt-on-error -file-line-error -interaction=nonstopmode -output-directory=${OUT_DIR} \
+         ${TEX_FILE} > ${LOG_FILE} && \
+bibtex -terse -min-crossrefs=1 ${AUX_FILE} && \
 pdflatex -halt-on-error -file-line-error -interaction=nonstopmode -output-directory=${OUT_DIR} \
          ${TEX_FILE} > ${LOG_FILE} && \
 pdflatex -halt-on-error -file-line-error -interaction=nonstopmode -output-directory=${OUT_DIR} \

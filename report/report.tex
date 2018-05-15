@@ -23,7 +23,6 @@
 \usepackage{caption}
 \usepackage{listings}
 \usepackage{cleveref}
-\usepackage{mathtools}
 
 \graphicspath{{img/}}
 
@@ -36,13 +35,13 @@
 
 \newcommand{\subimage}[3][1]{
 \subfigure{
-    \includegraphics[valign=c, width=#1\textwidth]{#2.#3}
+\includegraphics[valign=c, width=#1\textwidth]{#2.#3}
 }
 }
 
 \newcommand{\smplimage}[3][1]{
 \centerline{
-    \includegraphics[width=#1\textwidth]{#2.#3}
+\includegraphics[width=#1\textwidth]{#2.#3}
 }
 }
 
@@ -64,9 +63,24 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
 
+This project explores methods for painting in the gradient-domain described in paper by James McCann and
+Nancy S. Pollard\cite{gradient}.
+
+In the frameworks of this project, simple GUI application that allows user to paint with gradient-painting brash will
+be implemented.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Methods}
+\section{Implementation}
+
+\subsection{Technologies}
+
+Application is implemented in C++ programing language with the usage of the following libraries:
+
+\begin{itemize}
+    \item \textbf{Qt framework}. Used for GUI and image processing.
+    \item \textbf{amgcl}. Library for solving large sparse linear systems with algebraic multigrid method. It was used
+    as a solver on the initial stages of development.
+\end{itemize}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -83,6 +97,5 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \bibliography{reference}
-
 
 \end{document}
