@@ -16,6 +16,10 @@
 #include "shapes/rectangle.h"
 #include "shapes/scribble.h"
 
+void saveImage(QImage img, QString filename) {
+	img.scaled(img.size() * 2, Qt::IgnoreAspectRatio, Qt::SmoothTransformation).save(filename);
+}
+
 CanvasModel::CanvasModel(QSize size, const QColor& main, const QColor& alt) :
 		images_(QMetaEnum::fromType<ImageType>().keyCount()),
 		main_color_(main), alt_color_(alt),
@@ -65,9 +69,7 @@ SolverType CanvasModel::getCurrentSolver() const {
 }
 
 void CanvasModel::saveComposed(QString filename) {
-	getImage(ImageType::IMG_COMPOSED).scaled(
-			getImage(ImageType::IMG_COMPOSED).size() * 2,
-			Qt::IgnoreAspectRatio, Qt::SmoothTransformation).save(filename);
+	saveImage(getImage(ImageType::IMG_COMPOSED), filename);
 }
 
 void CanvasModel::setIterationCountExp(int value) {
@@ -139,6 +141,11 @@ void CanvasModel::startPoisson() {
 
 	QPainter filler(&getImage(ImageType::IMG_COMPOSED));
 	filler.fillRect(getImage(ImageType::IMG_COMPOSED).rect(), Qt::white);
+	static int num = 0;
+	num++;
+	saveImage(getImage(ImageType::IMG_COMPOSED), QString::number(num) + "source.png");
+	saveImage(getImage(ImageType::IMG_MASK), QString::number(num) + "mask.png");
+	saveImage(getImage(ImageType::IMG_BG), QString::number(num) + "target.png");
 
 	auto solver = getSolver();
 	solver_future_.setFuture(QtConcurrent::run(solver,
