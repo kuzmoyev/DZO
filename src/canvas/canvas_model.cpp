@@ -7,20 +7,29 @@
 #include <QtCore/QMetaEnum>
 #include <QDebug>
 
-#include "simple_poisson_solver/poisson.h"
+#include "cuda_gauss_seidel_solver.h"
+#include "gauss_seidel_solver.h"
+#include "amgcl_solver.h"
 
 #include "canvas_model.h"
 #include "shapes/line.h"
 #include "shapes/rectangle.h"
 #include "shapes/scribble.h"
 
+void saveImage(QImage img, QString filename) {
+	img.scaled(img.size() * 2, Qt::IgnoreAspectRatio, Qt::SmoothTransformation).save(filename);
+}
+
 CanvasModel::CanvasModel(QSize size, const QColor& main, const QColor& alt) :
 		images_(QMetaEnum::fromType<ImageType>().keyCount()),
 		main_color_(main), alt_color_(alt),
 		next_shape_(ShapeType::LINE),
 		poisson_mode_(PoissonBlendingMode::OVERRIDE),
-		merging_mode_(BackgroundMergingMode::PRESERVE) {
+		merging_mode_(BackgroundMergingMode::PRESERVE),
+		current_solver_(SolverType::AMGCL) {
 	setCanvasSize(size);
+	getImage(ImageType::IMG_COMPOSED) = utility::filledImage(size, Qt::white);
+	connect(&solver_future_, &QFutureWatcher<QImage>::finished, this, &CanvasModel::solverFinished, Qt::QueuedConnection);
 }
 
 const QImage& CanvasModel::getImage(ImageType type) const {
@@ -53,6 +62,18 @@ PoissonBlendingMode CanvasModel::getPoissonMode() const {
 
 BackgroundMergingMode CanvasModel::getMergingMode() const {
 	return merging_mode_;
+}
+
+SolverType CanvasModel::getCurrentSolver() const {
+	return current_solver_;
+}
+
+void CanvasModel::saveComposed(QString filename) {
+	saveImage(getImage(ImageType::IMG_COMPOSED), filename);
+}
+
+void CanvasModel::setIterationCountExp(int value) {
+	iteration_count_exp_ = value;
 }
 
 void CanvasModel::setCanvasSize(QSize size) {
@@ -108,22 +129,27 @@ void CanvasModel::setAltColor(QColor color) {
 		emit colorsUpdated(main_color_, alt_color_);
 	}
 }
-
-void CanvasModel::calculatePoisson() {
+int num = 0;
+void CanvasModel::startPoisson() {
 	if (poisson_mode_ != PoissonBlendingMode::OVERRIDE) {
 		qDebug() << "Only OVERRIDE poisson mode is supported";
 	}
-	//TODO Run in separate thread
-	getImage(ImageType::IMG_COMPOSED) = simple_solver::poisson(
-			getImage(ImageType::IMG_BG),
-			getImage(ImageType::IMG_COMPOSED),
-			getImage(ImageType::IMG_MASK));
-	if (merging_mode_ == BackgroundMergingMode::REPLACE) {
-		qDebug() << "Only PRESERVE merging mode is supported";
-		/*getImage(ImageType::IMG_BG) = getImage(ImageType::IMG_COMPOSED);
-		shapes_.clear();*/
+	if (solver_future_.isRunning()) {
+		qDebug() << "Solver still running, won't start the second one";
+		return;
 	}
-	emit canvasUpdated(getImage(ImageType::IMG_COMPOSED).rect());
+	auto source = utility::filledImage(size_, Qt::white);
+	num++;
+	saveImage(source, QString::number(num) + "source.png");
+	saveImage(getImage(ImageType::IMG_MASK), QString::number(num) + "mask.png");
+	saveImage(getImage(ImageType::IMG_BG), QString::number(num) + "target.png");
+
+	auto solver = getSolver();
+	solver_future_.setFuture(QtConcurrent::run(solver,
+					  getImage(ImageType::IMG_BG), source,
+					  getImage(ImageType::IMG_MASK), 1u << iteration_count_exp_));
+
+	emit startedSolver();
 }
 
 void CanvasModel::setNextShape(ShapeType shape) {
@@ -134,8 +160,30 @@ void CanvasModel::setPoissonMode(PoissonBlendingMode mode) {
 	poisson_mode_ = mode;
 }
 
+void CanvasModel::setSolver(SolverType s) {
+	current_solver_ = s;
+}
+
 void CanvasModel::setMergingMode(BackgroundMergingMode mode) {
 	merging_mode_ = mode;
+}
+
+void CanvasModel::solverFinished() {
+	getImage(ImageType::IMG_COMPOSED) = solver_future_.result();
+	if (merging_mode_ == BackgroundMergingMode::REPLACE) {
+		qDebug() << "Only PRESERVE merging mode is supported";
+		/*getImage(ImageType::IMG_BG) = getImage(ImageType::IMG_COMPOSED);
+		shapes_.clear();*/
+	}
+	saveImage(getImage(ImageType::IMG_COMPOSED), QString::number(num) + "result.png");
+	emit stoppedSolver();
+	emit canvasUpdated(getImage(ImageType::IMG_COMPOSED).rect());
+}
+
+void CanvasModel::clearImg() {
+	getImage(ImageType::IMG_COMPOSED) = utility::filledImage(size_, Qt::white);
+	shapes_.clear();
+	updateCanvas(getImage(ImageType::IMG_COMPOSED).rect(), true);
 }
 
 void CanvasModel::updateCanvas(const QRect& clipping_region, bool emit_signal) {
@@ -182,3 +230,15 @@ Shape CanvasModel::createShape() {
 	}
 }
 
+CanvasModel::solver_t CanvasModel::getSolver() const {
+	switch (current_solver_) {
+		case SolverType::AMGCL:
+			return amgcl_solver::poisson;
+		case SolverType::PS_CPU:
+			return gauss_seidel_solver::poisson;
+		case SolverType::PS_GPU:
+			return cuda_gauss_seidel_solver::poisson;
+	}
+
+	return amgcl_solver::poisson;
+}

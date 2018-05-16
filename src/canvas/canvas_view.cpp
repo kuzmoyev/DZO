@@ -8,9 +8,9 @@
 
 #include "QMouseEvent"
 
-CanvasView::CanvasView(CanvasModel& model, ImageType role, QWidget* parent) :
-		QWidget(parent), model_(model), role_(role), painting_mode_(ENABLED) {
-	setFixedSize(model.getCanvasSize());
+CanvasView::CanvasView(CanvasModel& model, ImageType role, int scale, QWidget* parent) :
+		QWidget(parent), model_(model), role_(role), painting_mode_(ENABLED), scale_(scale) {
+	setFixedSize(model.getCanvasSize() * scale_);
 	connect(&model_, &CanvasModel::canvasUpdated, this, &CanvasView::updateCanvas);
 	connect(&model_, &CanvasModel::canvasSizeChanged, this, &CanvasView::changeCanvasSize);
 	connect(&model_, &CanvasModel::startedPainting, this, &CanvasView::blockPainting);
@@ -18,11 +18,11 @@ CanvasView::CanvasView(CanvasModel& model, ImageType role, QWidget* parent) :
 }
 
 void CanvasView::updateCanvas(QRect clip_area) {
-	update(clip_area);
+	update(QRect(clip_area.topLeft() * scale_, (clip_area.bottomRight() +QPoint(1, 1)) * scale_));
 }
 
 void CanvasView::changeCanvasSize(QSize size) {
-	setFixedSize(size);
+	setFixedSize(size * scale_);
 	update(); //TODO Check if needed
 }
 
@@ -40,20 +40,20 @@ void CanvasView::unblockPainting() {
 
 void CanvasView::mousePressEvent(QMouseEvent* event) {
 	if (painting_mode_ == ENABLED) {
-		model_.onMouseDown(event->pos());
+		model_.onMouseDown(event->pos() / scale_);
 		painting_mode_ = ACTIVE;
 	}
 }
 
 void CanvasView::mouseReleaseEvent(QMouseEvent* event) {
 	if (painting_mode_ == ACTIVE) {
-		model_.onMouseUp(event->pos());
+		model_.onMouseUp(event->pos() / scale_);
 	}
 }
 
 void CanvasView::mouseMoveEvent(QMouseEvent* event) {
 	if (painting_mode_ == ACTIVE) {
-		model_.onMouseMove(event->pos());
+		model_.onMouseMove(event->pos() / scale_);
 	}
 }
 
@@ -61,5 +61,6 @@ void CanvasView::paintEvent(QPaintEvent* event) {
 	Q_UNUSED(event);
 	//TODO check painting is clipped
 	QPainter p(this);
-	p.drawImage(QPoint(0, 0), model_.getImage(role_));
+	auto img = model_.getImage(role_);
+	p.drawImage(QPoint(0, 0), img.scaled(img.size() * scale_));
 }
