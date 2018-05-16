@@ -129,7 +129,7 @@ void CanvasModel::setAltColor(QColor color) {
 		emit colorsUpdated(main_color_, alt_color_);
 	}
 }
-
+int num = 0;
 void CanvasModel::startPoisson() {
 	if (poisson_mode_ != PoissonBlendingMode::OVERRIDE) {
 		qDebug() << "Only OVERRIDE poisson mode is supported";
@@ -138,19 +138,15 @@ void CanvasModel::startPoisson() {
 		qDebug() << "Solver still running, won't start the second one";
 		return;
 	}
-
-	QPainter filler(&getImage(ImageType::IMG_COMPOSED));
-	filler.fillRect(getImage(ImageType::IMG_COMPOSED).rect(), Qt::white);
-	static int num = 0;
+	auto source = utility::filledImage(size_, Qt::white);
 	num++;
-	saveImage(getImage(ImageType::IMG_COMPOSED), QString::number(num) + "source.png");
+	saveImage(source, QString::number(num) + "source.png");
 	saveImage(getImage(ImageType::IMG_MASK), QString::number(num) + "mask.png");
 	saveImage(getImage(ImageType::IMG_BG), QString::number(num) + "target.png");
 
 	auto solver = getSolver();
 	solver_future_.setFuture(QtConcurrent::run(solver,
-					  getImage(ImageType::IMG_BG),
-					  getImage(ImageType::IMG_COMPOSED),
+					  getImage(ImageType::IMG_BG), source,
 					  getImage(ImageType::IMG_MASK), 1u << iteration_count_exp_));
 
 	emit startedSolver();
@@ -179,8 +175,15 @@ void CanvasModel::solverFinished() {
 		/*getImage(ImageType::IMG_BG) = getImage(ImageType::IMG_COMPOSED);
 		shapes_.clear();*/
 	}
+	saveImage(getImage(ImageType::IMG_COMPOSED), QString::number(num) + "result.png");
 	emit stoppedSolver();
 	emit canvasUpdated(getImage(ImageType::IMG_COMPOSED).rect());
+}
+
+void CanvasModel::clearImg() {
+	getImage(ImageType::IMG_COMPOSED) = utility::filledImage(size_, Qt::white);
+	shapes_.clear();
+	updateCanvas(getImage(ImageType::IMG_COMPOSED).rect(), true);
 }
 
 void CanvasModel::updateCanvas(const QRect& clipping_region, bool emit_signal) {

@@ -63,6 +63,7 @@ class CanvasModel : public QObject {
 	void setSolver(SolverType);
 	void setMergingMode(BackgroundMergingMode);
 	void solverFinished();
+	void clearImg();
 
 
   private:

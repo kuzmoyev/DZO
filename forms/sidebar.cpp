@@ -27,6 +27,10 @@ Sidebar::Sidebar(CanvasModel& model, QWidget* parent) :
 	model.setIterationCountExp(ui->iterations_count_->value());
 	connect(ui->iterations_count_, &QSlider::valueChanged,
 			&model, &CanvasModel::setIterationCountExp);
+
+	ui->save_mask_btn_->setEnabled(true);
+	ui->save_mask_btn_->setText("Clear");
+	connect(ui->save_mask_btn_, &QPushButton::clicked, &model, &CanvasModel::clearImg);
 }
 
 Sidebar::~Sidebar() {
