@@ -8,7 +8,8 @@ namespace gauss_seidel_solver {
 	QImage poisson(
 			const QImage& target,
 			const QImage& source,
-			const QImage& mask
+			const QImage& mask,
+			unsigned iterations
 	);
 
 	QImage poisson_impl(

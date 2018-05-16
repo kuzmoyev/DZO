@@ -29,7 +29,7 @@ namespace amgcl_solver {
 	QImage poisson(
 			const QImage& target,
 			const QImage& source,
-			const QImage& mask
+			const QImage& mask, unsigned iterations
 	) {
 		using namespace std::chrono;
 		auto time_start = high_resolution_clock::now();

@@ -64,6 +64,16 @@ SolverType CanvasModel::getCurrentSolver() const {
 	return current_solver_;
 }
 
+void CanvasModel::saveComposed(QString filename) {
+	getImage(ImageType::IMG_COMPOSED).scaled(
+			getImage(ImageType::IMG_COMPOSED).size() * 2,
+			Qt::IgnoreAspectRatio, Qt::SmoothTransformation).save(filename);
+}
+
+void CanvasModel::setIterationCountExp(int value) {
+	iteration_count_exp_ = value;
+}
+
 void CanvasModel::setCanvasSize(QSize size) {
 	if (size == size_)
 		return;
@@ -134,7 +144,7 @@ void CanvasModel::startPoisson() {
 	solver_future_.setFuture(QtConcurrent::run(solver,
 					  getImage(ImageType::IMG_BG),
 					  getImage(ImageType::IMG_COMPOSED),
-					  getImage(ImageType::IMG_MASK)));
+					  getImage(ImageType::IMG_MASK), 1u << iteration_count_exp_));
 
 	emit startedSolver();
 }

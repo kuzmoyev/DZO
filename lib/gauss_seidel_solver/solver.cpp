@@ -112,10 +112,9 @@ namespace gauss_seidel_solver {
 	QImage poisson(
 			const QImage& target,
 			const QImage& source,
-			const QImage& mask) {
+			const QImage& mask, unsigned iterations) {
 		log_start = high_resolution_clock::now();
-		const uint max_iterations = 2 << 28;
 		const int img_size = target.size().height() * target.size().width();
-		return poisson_impl(target, source, mask, max_iterations / img_size);
+		return poisson_impl(target, source, mask, iterations / img_size);
 	}
 }

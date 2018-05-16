@@ -2,6 +2,7 @@
 #include <QtWidgets/QColorDialog>
 #include <QDebug>
 #include <QtWidgets/QVBoxLayout>
+#include <QtWidgets/QFileDialog>
 
 #include "sidebar.h"
 #include "ui_sidebar.h"
@@ -22,6 +23,10 @@ Sidebar::Sidebar(CanvasModel& model, QWidget* parent) :
 
 	connect(&model, &CanvasModel::startedSolver, this, &Sidebar::deactivateRunBtn);
 	connect(&model, &CanvasModel::stoppedSolver, this, &Sidebar::activateRunBtn);
+	connect(ui->save_canvas_btn_, &QPushButton::clicked, this, &Sidebar::saveComposed);
+	model.setIterationCountExp(ui->iterations_count_->value());
+	connect(ui->iterations_count_, &QSlider::valueChanged,
+			&model, &CanvasModel::setIterationCountExp);
 }
 
 Sidebar::~Sidebar() {
@@ -57,6 +62,12 @@ void Sidebar::deactivateRunBtn() {
 void Sidebar::activateRunBtn() {
 	ui->run_btn_->setEnabled(true);
 	ui->run_btn_->setText("Run");
+}
+
+void Sidebar::saveComposed() {
+	auto filename = QFileDialog::getSaveFileName(this, "Save composed image");
+	if (!filename.isEmpty())
+		model_.saveComposed(filename);
 }
 
 
