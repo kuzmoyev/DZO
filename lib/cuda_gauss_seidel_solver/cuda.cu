@@ -53,14 +53,14 @@ namespace cuda_gauss_seidel_solver {
 
 	__host__ void gauss_seidel_solve(
 			const std::vector<std::array<int, 4>>& mat,
-			const std::vector<int>& rhs,
-			std::vector<real_t>& sol,
+			std::array<const std::vector<int>, 3>& rhs,
+			std::array<std::vector<real_t>, 3>& sol,
 			unsigned int iterations) {
 		constexpr unsigned max_threads_per_block = 1024;
 
 		MatrixRow* d_mat;
-		int* d_rhs;
-		real_t* d_sol[2];
+		std::array<int*, 3> d_rhs;
+		std::array<std::array<real_t*, 2>, 3> d_sol;
 		unsigned mat_size = (unsigned) mat.size();
 
 		unsigned block_size = 128;
@@ -68,38 +68,52 @@ namespace cuda_gauss_seidel_solver {
 
 		static_assert(sizeof(*d_mat) == sizeof(mat[0]), "Device matrix use different datatype");
 		HANDLE_ERROR(cudaMalloc((void**) &d_mat, mat.size() * sizeof(*d_mat)));
-		HANDLE_ERROR(cudaMalloc((void**) &d_rhs, rhs.size() * sizeof(*d_rhs)));
-		HANDLE_ERROR(cudaMalloc((void**) d_sol, sol.size() * sizeof(real_t)));
-		HANDLE_ERROR(cudaMalloc((void**) (d_sol + 1), sol.size() * sizeof(real_t)));
-
 		HANDLE_ERROR(cudaMemcpy(d_mat, mat.data(),
 								mat_size * sizeof(*d_mat),
 								cudaMemcpyHostToDevice));
 
-		HANDLE_ERROR(cudaMemcpy(d_rhs, rhs.data(),
-								rhs.size() * sizeof(*d_rhs),
-								cudaMemcpyHostToDevice));
+		for (int i = 0; i < 3; i++) {
+			HANDLE_ERROR(cudaMalloc((void**) &(d_rhs[i]), rhs[i].size() * sizeof(int)));
+			HANDLE_ERROR(cudaMalloc((void**) &(d_sol[i][0]), sol[i].size() * sizeof(real_t)));
+			HANDLE_ERROR(cudaMalloc((void**) &(d_sol[i][1]), sol[i].size() * sizeof(real_t)));
 
-		HANDLE_ERROR(cudaMemcpy(d_sol[0], sol.data(),
-								sol.size() * sizeof(real_t),
-								cudaMemcpyHostToDevice));
+			HANDLE_ERROR(cudaMemcpy(d_rhs[i], rhs[i].data(),
+									rhs[i].size() * sizeof(int),
+									cudaMemcpyHostToDevice));
+
+			HANDLE_ERROR(cudaMemcpy(d_sol[i][0], sol[i].data(),
+									sol[i].size() * sizeof(real_t),
+									cudaMemcpyHostToDevice));
+		}
+
+		std::array<cudaStream_t, 3> streams;
+		for (int i = 0; i < 3; i++) {
+			HANDLE_ERROR(cudaStreamCreate(&streams[i]));
+		}
 
 		int buf_idx = 0;
-		for (int i = 0; i < iterations; i++) {
-			_kernel_gauss_seidel <<<block_count, block_size>>> (
-					d_mat, mat_size, d_rhs, d_sol[buf_idx], d_sol[buf_idx ^ 1]);
+		for (int it = 0; it < iterations; it++) {
+			for (int i = 0; i < 3; i++)
+				_kernel_gauss_seidel<<<block_count, block_size, 0, streams[i]>>> (
+						d_mat, mat_size, d_rhs[i], d_sol[i][buf_idx], d_sol[i][buf_idx ^ 1]);
 			buf_idx ^= 1;
 		}
 
 		HANDLE_ERROR(cudaDeviceSynchronize());
 
-		HANDLE_ERROR(cudaMemcpy(sol.data(), d_sol[buf_idx],
-								sol.size() * sizeof(real_t),
-								cudaMemcpyDeviceToHost));
+		for (int i = 0; i < 3; i++) {
+			HANDLE_ERROR(cudaStreamDestroy(streams[i]));
+		}
 
+		for (int i = 0; i < 3; i++) {
+			HANDLE_ERROR(cudaMemcpy(sol[i].data(), d_sol[i][buf_idx],
+									sol[i].size() * sizeof(real_t),
+									cudaMemcpyDeviceToHost));
+
+			HANDLE_ERROR(cudaFree(d_sol[i][1]));
+			HANDLE_ERROR(cudaFree(d_sol[i][0]));
+			HANDLE_ERROR(cudaFree(d_rhs[i]));
+		}
 		HANDLE_ERROR(cudaFree(d_mat));
-		HANDLE_ERROR(cudaFree(d_rhs));
-		HANDLE_ERROR(cudaFree(d_sol[0]));
-		HANDLE_ERROR(cudaFree(d_sol[1]));
 	}
 }

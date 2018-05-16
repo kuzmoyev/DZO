@@ -18,7 +18,7 @@ namespace cuda_gauss_seidel_solver {
 
 	void gauss_seidel_solve(
 			const std::vector<std::array<int, 4>>& mat,
-			const std::vector<int>& rhs,
-			std::vector<real_t>& sol,
+			std::array<const std::vector<int>, 3>& rhs,
+			std::array<std::vector<real_t>, 3>& sol,
 			unsigned int iterations);
 }

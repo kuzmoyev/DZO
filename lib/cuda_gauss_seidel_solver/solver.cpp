@@ -72,10 +72,16 @@ namespace cuda_gauss_seidel_solver {
 						   << target.height() / RESIZE_FACTOR;
 		}
 
+		std::array<const std::vector<int>, 3> rhs{std::move(rhs_r),
+												  std::move(rhs_g),
+												  std::move(rhs_b)};
+		std::array<std::vector<real_t>, 3> sol{
+				std::move(sol_r),
+				std::move(sol_g),
+				std::move(sol_b)
+		};
 
-		gauss_seidel_solve(mat, rhs_r, sol_r, iterations);
-		gauss_seidel_solve(mat, rhs_g, sol_g, iterations);
-		gauss_seidel_solve(mat, rhs_b, sol_b, iterations);
+		gauss_seidel_solve(mat, rhs, sol, iterations);
 
 		qDebugWithTs() << "Solved in" << iterations << "iterations [GPU]";
 
@@ -83,9 +89,9 @@ namespace cuda_gauss_seidel_solver {
 		int x, y;
 		for (size_t i = 0; i < mat.size(); i++) {
 			boost::tie(x, y) = pixels[i];
-			int r = utility::bound(int(sol_r[i]));
-			int g = utility::bound(int(sol_g[i]));
-			int b = utility::bound(int(sol_b[i]));
+			int r = utility::bound(int(sol[0][i]));
+			int g = utility::bound(int(sol[1][i]));
+			int b = utility::bound(int(sol[2][i]));
 
 			QColor c(r, g, b);
 			result.setPixel(x, y, c.rgb());
@@ -98,7 +104,7 @@ namespace cuda_gauss_seidel_solver {
 			const QImage& target,
 			const QImage& source,
 			const QImage& mask) {
-		const uint max_iterations = 2 << 27;
+		const uint max_iterations = 2 << 28;
 		const int img_size = target.size().height() * target.size().width();
 		try {
 			log_start = high_resolution_clock::now();
