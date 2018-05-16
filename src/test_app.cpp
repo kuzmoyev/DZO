@@ -4,7 +4,7 @@
 #include <QtWidgets/QLabel>
 #include <iostream>
 
-#include "simple_poisson_solver/poisson.h"
+#include "include/poisson.h"
 
 using namespace std;
 
@@ -14,22 +14,22 @@ int main(int argc, char** argv) {
 	int imgId = 1;
 
 	QImage source;
-	source.load("../src/imgs/source" + QString::number(imgId) + ".png");
+	source.load("../resources/imgs/source" + QString::number(imgId) + ".png");
 	source = source.scaled(800, 600);
 
 	QImage target;
-	target.load("../src/imgs/target" + QString::number(imgId) + ".jpg");
+	target.load("../resources/imgs/target" + QString::number(imgId) + ".jpg");
 	target = target.scaled(800, 600);
 
 	QImage mask;
-	mask.load("../src/imgs/mask" + QString::number(imgId) + ".png");
+	mask.load("../resources/imgs/mask" + QString::number(imgId) + ".png");
 	mask = mask.scaled(800, 600);
 
-	cout << "opened" << endl;
+	qDebug() << "opened";
 
 	QImage result = simple_solver::poisson(target, source, mask);
 
-	cout << "poissoned" << endl;
+	qDebug() << "poissoned";
 
 	QLabel myLabel;
 	myLabel.setPixmap(QPixmap::fromImage(result));
@@ -38,9 +38,9 @@ int main(int argc, char** argv) {
 
 	myLabel.show();
 
-	result.save("../src/imgs/result" + QString::number(imgId) + ".png");
+	result.save("../resources/imgs/result" + QString::number(imgId) + ".png");
 
-	cout << "Showed" << endl;
+	qDebug() << "showed";
 
 	return app.exec();
 }

@@ -16,7 +16,7 @@
 class CanvasView : public QWidget {
   Q_OBJECT
   public:
-	CanvasView(CanvasModel& model, ImageType role, QWidget* parent = nullptr);
+	CanvasView(CanvasModel& model, ImageType role, int scale, QWidget* parent = nullptr);
 
   protected slots:
 	void updateCanvas(QRect);
@@ -34,10 +34,10 @@ class CanvasView : public QWidget {
 	enum PaintingMode {
 		DISABLED, ENABLED, ACTIVE, BLOCKED
 	};
-
 	CanvasModel& model_;
 	ImageType role_;
 	PaintingMode painting_mode_;
+	int scale_;
 };
 
 
