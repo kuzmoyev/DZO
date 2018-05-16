@@ -2,6 +2,9 @@
 
 #include <QtGui/QImage>
 
+/**
+ * @brief CUDA implementation of gauss-seidel iterative solver
+ */
 namespace cuda_gauss_seidel_solver {
 	using real_t = float;
 

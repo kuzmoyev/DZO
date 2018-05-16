@@ -16,12 +16,35 @@
 class CanvasView : public QWidget {
   Q_OBJECT
   public:
+	/**
+	 * @brief View ctor
+	 * @param model - main app model
+	 * @param role - type of canvas to display
+	 * @param scale - image display size scaling
+	 * @param parent - QWidget parent
+	 */
 	CanvasView(CanvasModel& model, ImageType role, int scale, QWidget* parent = nullptr);
 
   protected slots:
+	/**
+	 * @brief Redraw part of canvas
+	 */
 	void updateCanvas(QRect);
+	/**
+	 * @brief Change size of canvas
+	 */
 	void changeCanvasSize(QSize);
+	/**
+	 * @brief Stops reacting to mouse event
+	 *
+	 * This slot is activated when used starts drawing on another view
+	 */
 	void blockPainting();
+	/**
+	 * @brief Reenable reaction to mouse event
+	 *
+	 * This slot is activated when used stops drawing on another view
+	 */
 	void unblockPainting();
 
   protected:

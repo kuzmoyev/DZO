@@ -2,6 +2,10 @@
 
 #include "shape.h"
 
+/**
+ * @brief Drawn shape, represented by the line,
+ * which ends are defined by start and finish positions of the cursor
+ */
 class Line : public ShapeBase {
   public:
 	explicit Line(const QColor& color);

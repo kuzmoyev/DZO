@@ -3,7 +3,9 @@
 #include "utility.h"
 
 using namespace std;
-
+/**
+ * @brief Parallel CPU implementation of gauss-seidel iterative solver
+ */
 namespace gauss_seidel_solver {
 	QImage poisson(
 			const QImage& target,

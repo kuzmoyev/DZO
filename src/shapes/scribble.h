@@ -1,7 +1,9 @@
 #pragma once
 
 #include "shape.h"
-
+/**
+ * @brief Drawn shape, defined by the cursor path
+ */
 class Scribble : public ShapeBase {
   public:
 	Scribble(const QColor& main_color);

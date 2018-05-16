@@ -4,6 +4,9 @@
 #include <QWidget>
 #include <Qt>
 
+/**
+ * @brief Label that emits clicked signal same as QPushButton does
+ */
 class ClickableLabel : public QLabel {
     Q_OBJECT
 

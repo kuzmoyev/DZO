@@ -9,6 +9,9 @@
 
 constexpr int STROKE_WIDTH = 5;
 
+/**
+ * @brief Base class for each drawn shape
+ */
 class ShapeBase {
   public:
 	explicit ShapeBase(const QColor& main_color);
