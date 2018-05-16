@@ -30,7 +30,7 @@
 
 \graphicspath{{img/}}
 
-\title{(Nearly almost Real-Time but not quite) Gradient-Domain Painting}
+\title{(Nearly almost) Real-Time (but not quite) Gradient-Domain Painting}
 
 \author{Viacheslav Kroilov, Yevhen Kuzmovych}
 \affiliation{ČVUT - FIT}
@@ -62,133 +62,141 @@
 
 \begin{document}
 
-\maketitle
+    \maketitle
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Introduction}
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \section{Introduction}
 
-This project explores methods for painting in the gradient-domain described in paper by James McCann and
-Nancy S. Pollard\cite{gradient}.
+    This project explores methods for painting in the~gradient domain described in the~paper by James McCann and
+    Nancy S. Pollard\cite{gradient}. When user paints a stroke, gradient is emitted perpendicular to his stroke as
+    shown on~\cref{fig:example}.
 
-In the frameworks of this project, simple GUI application that allows user to draw with gradient-painting brash will
-be implemented. When user paints a stroke, gradient is emitted perpendicular to this stroke as shown on
+    In the frameworks of this project, simple GUI application that allows user to draw with gradient-painting brash will
+    be implemented.
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Methods}
-Gradient painting is effectively the same problem as guided interpolation in image editing. Taking blank image as a
-source ($S$), image with users stroke as a target ($T$), and mask $\Omega$ with the boundary $\delta$ on the whole
-target image except the place of the stroke, finding the resulting image with gradient is equivalent to solving
-a Poisson equation:
-
-\begin{equation}
-    \bigtriangledown^2 u = f
-\end{equation}
-
-Which in our case means for each pixel $x,y$ in the mask solving:
-
-\begin{equation}
-    \begin{multlined}
-        I_{x+1,y} + I_{x-1,y} + I_{x,y+1} + I_{x,y-1} - 4I_{x,y} = \\
-        S_{x+1,y} + S_{x-1,y} + S_{x,y+1} + S_{x,y-1} - 4S_{x,y}
-    \end{multlined}
-    \label{eq:poisson}
-\end{equation}
-
-where $I$ is the resulting image with boundary conditions on the edges of the image and on the users' strokes. Boundary
-conditions means that pixels on $\delta$ are known and $I_{x,y}$ for $ (x,y) \in \delta$ are replaced with
-known $T_{x,y}$.
-
-Using equation\eqref{eq:poisson} we build sparse matrix $A$ and \textit{right-hand side} vector $B$. Then the solution
-for $AX=B$ is a vector of the pixel values of the resulting image.
-
-In their paper\cite{gradient}, James McCann and Nancy S. Pollard suggest approximating solution with \textbf{multigrid}
-method, iterative algorithm for solving large sparse linear systems. In the framework of this project, we use
-\textbf{Gauss–Seidel} algorithm.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Implementation}
-
-\subsection{Technologies}
-
-Application is implemented in C++ programing language with the usage of the following libraries:
-
-\begin{itemize}
-    \item \textbf{Qt framework}. Framework used for GUI and image processing.
-    \item \textbf{amgcl}. Library for solving large sparse linear systems with algebraic multigrid method. It was used
-    as a solver on the initial stages of the development.
-    \item \textbf{CUDA}. Framework for parallelization of the computations on the Nvidia video cards.
-\end{itemize}
+    \begin{figure}[h]
+        \subimage[0.21]{target}{png}
+        \subimage[0.21]{result}{png}
+        \caption{Gradient-domain painting example.}
+        \label{fig:example}
+    \end{figure}
 
 
-\subsection{Sparse matrix}
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \section{Methods}
+    Gradient painting is effectively the same problem as guided interpolation in image editing. Taking blank image as a
+    source ($S$), image with users stroke as a target ($T$), and mask $\Omega$ with the boundary $\delta$ on the whole
+    target image except the place of the stroke, finding the resulting image with gradient is equivalent to solving
+    a Poisson equation:
 
-Matrix $A$ has at most 5 non-zero values ($1$s and/or~$-4$) on each row and dimensions of $p \times p$ where $p$ is
-a number of "white" pixels in a mask, which, in our case, are all pixels excluding ones with the stroke. So to minimize
-memory usage and to simplify CUDA parallelization it has structure as shown on figure~\ref{tbl:sparse}.
+    \begin{equation}
+        \bigtriangledown^2 u = f
+    \end{equation}
 
+    Which in our case means for each pixel $x,y$ in the mask solving:
 
+    \begin{equation}
+        \begin{multlined}
+            I_{x+1,y} + I_{x-1,y} + I_{x,y+1} + I_{x,y-1} - 4I_{x,y} = \\
+            S_{x+1,y} + S_{x-1,y} + S_{x,y+1} + S_{x,y-1} - 4S_{x,y}
+        \end{multlined}
+        \label{eq:poisson}
+    \end{equation}
 
-\begin{table*}[t]
-    \centering
-    \begin{tabular}{lclcccccccc}
-        & pixels & & \multicolumn{4}{c}{mat}                                                                                                           & \multicolumn{1}{l}{}  & sol & \multicolumn{1}{l}{}  & rhs                        \\ \cline{2-2} \cline{4-7} \cline{9-9} \cline{11-11}
-        \multicolumn{1}{l|}{\multirow{4}{*}{unknown}}         & \multicolumn{1}{c|}{$x_0,y_0$}         & \multicolumn{1}{l|}{} & \multicolumn{1}{c|}{$M_{0,0}$} & \multicolumn{1}{c|}{$M_{0,1}$} & \multicolumn{1}{c|}{$M_{0,2}$} & \multicolumn{1}{c|}{$M_{0,3}$} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{$I_0$}     & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{$R_0$} \\ \cline{2-2} \cline{4-7} \cline{9-9} \cline{11-11}
-        \multicolumn{1}{l|}{}                                 & \multicolumn{1}{c|}{$x_1,y_1$}         & \multicolumn{1}{l|}{} & \multicolumn{1}{c|}{$M_{1,0}$} & \multicolumn{1}{c|}{$M_{1,1}$} & \multicolumn{1}{c|}{$M_{1,2}$} & \multicolumn{1}{c|}{$M_{1,3}$} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{$I_1$}     & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{$R_1$} \\ \cline{2-2} \cline{4-7} \cline{9-9} \cline{11-11}
-        \multicolumn{1}{l|}{}                                 & \multicolumn{1}{c|}{\vdots}            & \multicolumn{1}{l|}{} & \multicolumn{1}{c|}{\vdots}    & \multicolumn{1}{c|}{\vdots}     & \multicolumn{1}{c|}{\vdots}  & \multicolumn{1}{c|}{\vdots}    & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{\vdots}    & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{\vdots}\\ \cline{2-2} \cline{4-7} \cline{9-9} \cline{11-11}
-        \multicolumn{1}{l|}{}                                 & \multicolumn{1}{c|}{$x_n,y_n$}         & \multicolumn{1}{l|}{} & \multicolumn{1}{c|}{$M_{n,0}$} & \multicolumn{1}{c|}{$M_{n,1}$} & \multicolumn{1}{c|}{$M_{n,2}$} & \multicolumn{1}{c|}{$M_{n,3}$} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{$I_n$}     & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{$R_n$} \\ \cline{2-2} \cline{4-7} \cline{9-9} \cline{11-11}
-        \multicolumn{1}{l|}{\multirow{3}{*}{known($\delta$)}} & \multicolumn{1}{c|}{$x_{n+1},y_{n+1}$} & & & & & & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{$T_{n+1}$} & &                            \\ \cline{2-2} \cline{9-9}
-        \multicolumn{1}{l|}{}                                 & \multicolumn{1}{c|}{\vdots}            & & & & & & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{\vdots}    & &                            \\ \cline{2-2} \cline{9-9}
-        \multicolumn{1}{l|}{}                                 & \multicolumn{1}{c|}{$x_p,y_p$}         & & & & & & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{$T_p$}     & &                            \\ \cline{2-2} \cline{9-9}
-        & & & & & & & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{0}         & &                            \\ \cline{9-9}
-    \end{tabular}
+    where $I$ is the resulting image with boundary conditions on the edges of the image and on the users strokes. Boundary
+    conditions means that pixels on $\delta$ are known and $I_{x,y}$ for $ (x,y) \in \delta$ are replaced with
+    known $T_{x,y}$.
 
-    \caption{Sparse matrix structure}
-    \label{tbl:sparse}
-\end{table*}
+    Using equation\eqref{eq:poisson} we build sparse matrix $A$ and \textit{right-hand side} vector $B$. Then the solution
+    for $AX=B$ is a vector of the pixel values of the resulting image.
 
-For $ |\Omega| = p $ and $ |\delta| = p-n $, \textit{pixels} vector stores coordinates of pixels in $\Omega$. $M_{i,j}$
-is an index of $j$s neighbour of pixel $i$. Vector \textit{rhs} contains right-hand side values from
-equation~\eqref{eq:poisson}, but if pixel has one or more neighbours from $\delta$, values of those neighbour-pixels are
-subtracted from the right-hand side. Solutions vector \textit{sol} stores resulting values of pixels from $\Omega$. If
-$j$s neighbour of $i$s pixel is on $\delta$, $M_{i,j}$ is an index of \textit{0} in the end of \textit{sol} (because its
-value is already subtracted from \textit{rhs}).
+    In their paper\cite{gradient}, James McCann and Nancy S. Pollard suggest approximating solution with \textbf{multigrid}
+    method, iterative algorithm for solving large sparse linear systems. In the framework of this project, we use
+    \textbf{Gauss–Seidel} algorithm.
 
-So instead of solving matrix $p \times p$, we need to solve matrix $n \times n$ but using all $p$ pixels.
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \section{Implementation}
 
-\subsection{Gauss–Seidel}
-Gauss–Seidel is a simple iterative method for solving linear systems. In our implementation it is defined as
-follows:
+    \subsection{Technologies}
 
-\begin{tabbing}
-    1. \=For $it=0$ to number of iterations\\
-    \>2. For \=$i=0$ to n $$\\
-    \>\>Set
-    \begin{math}
-        I_i = \dfrac{R_i - \sum_{j=0}^3{I_{M_{i,j}}}}{-4}
-    \end{math}
-\end{tabbing}
+    Application is implemented in C++ programing language with the usage of the following libraries:
 
-The primary problem of this algorithm is that it might not converge to the solution fast enough, which would require
-more iterations and consequently more computation time. The solution is the \textbf{multigrid} method. The idea behind
-multigrid is in precomputing solution on the smaller image and initializing solution vector with precomputed values
-instead of random values (or all 125s as in our implementation). This method allows to perform much more iterations on
-a smaller image in a short period of time and much less iterations on the original image. We scale image recursively
-down to image $5 \times 5$ and perform $\approx 381000$ iterations while on the original image ($300 \times 300$) only
-$\approx 6000$ iterations.
+    \begin{itemize}
+        \item \textbf{Qt framework}. Framework used for GUI and image processing.
+        \item \textbf{amgcl}. Library for solving large sparse linear systems with algebraic multigrid method. It was used
+        as a solver on the initial stages of the development.
+        \item \textbf{CUDA}. Framework for parallelization of the computations on the Nvidia video cards.
+    \end{itemize}
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Conclusion}
+    \subsection{Sparse matrix}
 
-In frameworks of this project, we've implemented application with graphical interface that allows user to draw in
-the gradient-domain using gradient brash in real-time (not really  $\approx 0.2$ fps).
-
-Gradient painting is performed using gauss-seidel algorithm with multigrid optimization. Implementation is also
-parallelized with CUDA framework on the GPU .
+    Matrix $A$ has at most 5 non-zero values ($1$s and/or~$-4$) on each row and dimensions of $p \times p$ where $p$ is
+    a number of "white" pixels in a mask, which, in our case, are all pixels excluding ones with the stroke. So to minimize
+    memory usage and to simplify CUDA parallelization it has structure as shown on figure~\ref{tbl:sparse}.
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\bibliography{reference}
+
+    \begin{table*}[t]
+        \centering
+        \begin{tabular}{lclcccccccc}
+            & pixels & & \multicolumn{4}{c}{mat}                                                                                                           & \multicolumn{1}{l}{}  & sol & \multicolumn{1}{l}{}  & rhs                        \\ \cline{2-2} \cline{4-7} \cline{9-9} \cline{11-11}
+            \multicolumn{1}{l|}{\multirow{4}{*}{unknown}}         & \multicolumn{1}{c|}{$x_0,y_0$}         & \multicolumn{1}{l|}{} & \multicolumn{1}{c|}{$M_{0,0}$} & \multicolumn{1}{c|}{$M_{0,1}$} & \multicolumn{1}{c|}{$M_{0,2}$} & \multicolumn{1}{c|}{$M_{0,3}$} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{$I_0$}     & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{$R_0$} \\ \cline{2-2} \cline{4-7} \cline{9-9} \cline{11-11}
+            \multicolumn{1}{l|}{}                                 & \multicolumn{1}{c|}{$x_1,y_1$}         & \multicolumn{1}{l|}{} & \multicolumn{1}{c|}{$M_{1,0}$} & \multicolumn{1}{c|}{$M_{1,1}$} & \multicolumn{1}{c|}{$M_{1,2}$} & \multicolumn{1}{c|}{$M_{1,3}$} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{$I_1$}     & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{$R_1$} \\ \cline{2-2} \cline{4-7} \cline{9-9} \cline{11-11}
+            \multicolumn{1}{l|}{}                                 & \multicolumn{1}{c|}{\vdots}            & \multicolumn{1}{l|}{} & \multicolumn{1}{c|}{\vdots}    & \multicolumn{1}{c|}{\vdots}     & \multicolumn{1}{c|}{\vdots}  & \multicolumn{1}{c|}{\vdots}    & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{\vdots}    & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{\vdots}\\ \cline{2-2} \cline{4-7} \cline{9-9} \cline{11-11}
+            \multicolumn{1}{l|}{}                                 & \multicolumn{1}{c|}{$x_n,y_n$}         & \multicolumn{1}{l|}{} & \multicolumn{1}{c|}{$M_{n,0}$} & \multicolumn{1}{c|}{$M_{n,1}$} & \multicolumn{1}{c|}{$M_{n,2}$} & \multicolumn{1}{c|}{$M_{n,3}$} & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{$I_n$}     & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{$R_n$} \\ \cline{2-2} \cline{4-7} \cline{9-9} \cline{11-11}
+            \multicolumn{1}{l|}{\multirow{3}{*}{known($\delta$)}} & \multicolumn{1}{c|}{$x_{n+1},y_{n+1}$} & & & & & & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{$T_{n+1}$} & &                            \\ \cline{2-2} \cline{9-9}
+            \multicolumn{1}{l|}{}                                 & \multicolumn{1}{c|}{\vdots}            & & & & & & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{\vdots}    & &                            \\ \cline{2-2} \cline{9-9}
+            \multicolumn{1}{l|}{}                                 & \multicolumn{1}{c|}{$x_p,y_p$}         & & & & & & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{$T_p$}     & &                            \\ \cline{2-2} \cline{9-9}
+            & & & & & & & \multicolumn{1}{c|}{} & \multicolumn{1}{c|}{0}         & &                            \\ \cline{9-9}
+        \end{tabular}
+
+        \caption{Sparse matrix structure}
+        \label{tbl:sparse}
+    \end{table*}
+
+    For $ |\Omega| = p $ and $ |\delta| = p-n $, \textit{pixels} vector stores coordinates of pixels in $\Omega$. $M_{i,j}$
+    is an index of $j$s neighbour of pixel $i$. Vector \textit{rhs} contains right-hand side values from
+    equation~\eqref{eq:poisson}, but if pixel has one or more neighbours from $\delta$, values of those neighbour-pixels are
+    subtracted from the right-hand side. Solutions vector \textit{sol} stores resulting values of pixels from $\Omega$. If
+    $j$s neighbour of $i$s pixel is on $\delta$, $M_{i,j}$ is an index of \textit{0} in the end of \textit{sol} (because its
+    value is already subtracted from \textit{rhs}).
+
+    So instead of solving matrix $p \times p$, we need to solve matrix $n \times n$ but using all $p$ pixels.
+
+    \subsection{Gauss–Seidel}
+    Gauss–Seidel is a simple iterative method for solving linear systems. In our implementation it is defined as
+    follows:
+
+    \begin{tabbing}
+        1. \=For $it=0$ to number of iterations\\
+        \>2. For \=$i=0$ to n $$\\
+        \>\>Set
+        \begin{math}
+            I_i = \dfrac{R_i - \sum_{j=0}^3{I_{M_{i,j}}}}{-4}
+        \end{math}
+    \end{tabbing}
+
+    The primary problem of this algorithm is that it might not converge to the solution fast enough, which would require
+    more iterations and consequently more computation time. The solution is the \textbf{multigrid} method. The idea behind
+    multigrid is in precomputing solution on the smaller image and initializing solution vector with precomputed values
+    instead of random values (or all 125s as in our implementation). This method allows to perform much more iterations on
+    a smaller image in a short period of time and much less iterations on the original image. We scale image recursively
+    down to image $5 \times 5$ and perform $\approx 381000$ iterations while on the original image ($300 \times 300$) only
+    $\approx 6000$ iterations.
+
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \section{Conclusion}
+
+    In frameworks of this project, we've implemented application with graphical interface that allows user to draw in
+    the gradient-domain using gradient brash in real-time (not really  $\approx 0.2$ fps).
+
+    Gradient painting is performed using gauss-seidel algorithm with multigrid optimization. Implementation is also
+    parallelized with CUDA framework on the GPU .
+
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    \bibliography{reference}
 
 \end{document}
