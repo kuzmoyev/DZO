@@ -17,7 +17,6 @@ namespace utility {
 		return std::max(std::min(x, max), min);
 	}
 
-
 	QRect rectFrom2Points(const QPoint& a, const QPoint& b);
 
 	QColor colorFromDirection(float delta_x, float delta_y);
@@ -25,6 +24,8 @@ namespace utility {
 	std::vector<std::vector<double>> getGaussianKernel(size_t size);
 
 	QImage gaussBlur(const QImage& img, int kernel = 15);
+
+	QImage filledImage(QSize size, QColor color);
 
 	// Assembles matrix for Poisson's equation with boundary condition on the masks boundary.
 	// The matrix is returned in the CRS components ptr, col, and val.

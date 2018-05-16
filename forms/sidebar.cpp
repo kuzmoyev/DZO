@@ -2,6 +2,7 @@
 #include <QtWidgets/QColorDialog>
 #include <QDebug>
 #include <QtWidgets/QVBoxLayout>
+#include <QtWidgets/QFileDialog>
 
 #include "sidebar.h"
 #include "ui_sidebar.h"
@@ -22,6 +23,10 @@ Sidebar::Sidebar(CanvasModel& model, QWidget* parent) :
 
 	connect(&model, &CanvasModel::startedSolver, this, &Sidebar::deactivateRunBtn);
 	connect(&model, &CanvasModel::stoppedSolver, this, &Sidebar::activateRunBtn);
+	connect(ui->save_canvas_btn_, &QPushButton::clicked, this, &Sidebar::saveComposed);
+	model.setIterationCountExp(ui->iterations_count_->value());
+	connect(ui->iterations_count_, &QSlider::valueChanged,
+			&model, &CanvasModel::setIterationCountExp);
 }
 
 Sidebar::~Sidebar() {
@@ -51,13 +56,18 @@ void Sidebar::updateColors(QColor main, QColor alt) {
 }
 
 void Sidebar::deactivateRunBtn() {
-	qDebug() << "deactivate";
 	ui->run_btn_->setEnabled(false);
 	ui->run_btn_->setText("Running");
 }
 void Sidebar::activateRunBtn() {
 	ui->run_btn_->setEnabled(true);
 	ui->run_btn_->setText("Run");
+}
+
+void Sidebar::saveComposed() {
+	auto filename = QFileDialog::getSaveFileName(this, "Save composed image");
+	if (!filename.isEmpty())
+		model_.saveComposed(filename);
 }
 
 
@@ -173,12 +183,11 @@ void Sidebar::initSolverSelector() {
 	auto amgcl_btn = new QRadioButton("Amgcl");
 	layout->addWidget(amgcl_btn);
 
-	auto ps_cpu_btn = new QRadioButton("Gauss-Seigel CPU");
+	auto ps_cpu_btn = new QRadioButton("Gauss-Seidel");
 	layout->addWidget(ps_cpu_btn);
 
-	auto ps_gpu_btn = new QRadioButton("Gauss-Seigel GPU");
+	auto ps_gpu_btn = new QRadioButton("Gauss-Seidel CUDA");
 	layout->addWidget(ps_gpu_btn);
-	ps_gpu_btn->setEnabled(false);
 
 
 	auto group_box = new QGroupBox("Solver");

@@ -23,12 +23,12 @@
 class CanvasModel : public QObject {
   Q_OBJECT
 
-  	using solver_t = QImage(*)(const QImage&, const QImage&, const QImage&);
+	using solver_t = QImage(*)(const QImage&, const QImage&, const QImage&, unsigned int);
   public:
 
 	explicit CanvasModel(QSize size, const QColor& main, const QColor& alt);
 
-  const QImage& getImage(ImageType type) const;
+	const QImage& getImage(ImageType type) const;
 	QImage& getImage(ImageType type);
 	const QSize& getCanvasSize() const;
 	const QColor& getMainColor() const;
@@ -37,6 +37,7 @@ class CanvasModel : public QObject {
 	PoissonBlendingMode getPoissonMode() const;
 	BackgroundMergingMode getMergingMode() const;
 	SolverType getCurrentSolver() const;
+	void saveComposed(QString filename);
 
   signals:
 	void canvasUpdated(QRect bounds);
@@ -48,6 +49,7 @@ class CanvasModel : public QObject {
 	void stoppedSolver();
 
   public slots:
+	void setIterationCountExp(int);
 	// void setShapeFactory();
 	void setCanvasSize(QSize size);
 	void onMouseDown(QPoint pos);
@@ -77,6 +79,7 @@ class CanvasModel : public QObject {
 	QColor main_color_;
 	QColor alt_color_;
 	ShapeType next_shape_;
+	int iteration_count_exp_;
 	PoissonBlendingMode poisson_mode_;
 	BackgroundMergingMode merging_mode_;
 	SolverType current_solver_;

@@ -7,6 +7,7 @@
 #include <QtCore/QMetaEnum>
 #include <QDebug>
 
+#include "cuda_gauss_seidel_solver.h"
 #include "gauss_seidel_solver.h"
 #include "amgcl_solver.h"
 
@@ -14,6 +15,10 @@
 #include "shapes/line.h"
 #include "shapes/rectangle.h"
 #include "shapes/scribble.h"
+
+void saveImage(QImage img, QString filename) {
+	img.scaled(img.size() * 2, Qt::IgnoreAspectRatio, Qt::SmoothTransformation).save(filename);
+}
 
 CanvasModel::CanvasModel(QSize size, const QColor& main, const QColor& alt) :
 		images_(QMetaEnum::fromType<ImageType>().keyCount()),
@@ -23,6 +28,7 @@ CanvasModel::CanvasModel(QSize size, const QColor& main, const QColor& alt) :
 		merging_mode_(BackgroundMergingMode::PRESERVE),
 		current_solver_(SolverType::AMGCL) {
 	setCanvasSize(size);
+	getImage(ImageType::IMG_COMPOSED) = utility::filledImage(size, Qt::white);
 	connect(&solver_future_, &QFutureWatcher<QImage>::finished, this, &CanvasModel::solverFinished, Qt::QueuedConnection);
 }
 
@@ -60,6 +66,14 @@ BackgroundMergingMode CanvasModel::getMergingMode() const {
 
 SolverType CanvasModel::getCurrentSolver() const {
 	return current_solver_;
+}
+
+void CanvasModel::saveComposed(QString filename) {
+	saveImage(getImage(ImageType::IMG_COMPOSED), filename);
+}
+
+void CanvasModel::setIterationCountExp(int value) {
+	iteration_count_exp_ = value;
 }
 
 void CanvasModel::setCanvasSize(QSize size) {
@@ -125,11 +139,19 @@ void CanvasModel::startPoisson() {
 		return;
 	}
 
+	QPainter filler(&getImage(ImageType::IMG_COMPOSED));
+	filler.fillRect(getImage(ImageType::IMG_COMPOSED).rect(), Qt::white);
+	static int num = 0;
+	num++;
+	saveImage(getImage(ImageType::IMG_COMPOSED), QString::number(num) + "source.png");
+	saveImage(getImage(ImageType::IMG_MASK), QString::number(num) + "mask.png");
+	saveImage(getImage(ImageType::IMG_BG), QString::number(num) + "target.png");
+
 	auto solver = getSolver();
 	solver_future_.setFuture(QtConcurrent::run(solver,
 					  getImage(ImageType::IMG_BG),
 					  getImage(ImageType::IMG_COMPOSED),
-					  getImage(ImageType::IMG_MASK)));
+					  getImage(ImageType::IMG_MASK), 1u << iteration_count_exp_));
 
 	emit startedSolver();
 }
@@ -212,7 +234,7 @@ CanvasModel::solver_t CanvasModel::getSolver() const {
 		case SolverType::PS_CPU:
 			return gauss_seidel_solver::poisson;
 		case SolverType::PS_GPU:
-			throw std::runtime_error("CUDA not supported");
+			return cuda_gauss_seidel_solver::poisson;
 	}
 
 	return amgcl_solver::poisson;
