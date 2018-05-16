@@ -25,6 +25,8 @@ namespace utility {
 
 	QImage gaussBlur(const QImage& img, int kernel = 15);
 
+	QImage filledImage(QSize size, QColor color);
+
 	// Assembles matrix for Poisson's equation with boundary condition on the masks boundary.
 	// The matrix is returned in the CRS components ptr, col, and val.
 	ulong generateCrsMatrix(

@@ -24,6 +24,7 @@ CanvasModel::CanvasModel(QSize size, const QColor& main, const QColor& alt) :
 		merging_mode_(BackgroundMergingMode::PRESERVE),
 		current_solver_(SolverType::AMGCL) {
 	setCanvasSize(size);
+	getImage(ImageType::IMG_COMPOSED) = utility::filledImage(size, Qt::white);
 	connect(&solver_future_, &QFutureWatcher<QImage>::finished, this, &CanvasModel::solverFinished, Qt::QueuedConnection);
 }
 
